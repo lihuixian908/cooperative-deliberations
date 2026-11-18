@@ -89,6 +89,15 @@ th{background:#ebe7dc;font-size:15px}tbody tr:last-child td{border-bottom:0}
 @media(max-width:720px){.ledger-table{min-width:850px}}
 @media print{.execution-card,.action-card{break-inside:avoid}.agreement-grid{display:block}}
 
+.ending-tools{margin:0 0 20px}.ending-categories{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0}
+.ending-categories button[aria-pressed="true"]{background:var(--green);color:white;border-color:var(--green)}
+.ending-context{font-size:15px!important;background:var(--green-light);padding:12px 15px;border-radius:4px}
+.ending-entry{padding:18px 20px;border:1px solid var(--line);background:var(--white);border-radius:5px;margin:13px 0}
+.ending-entry.current-ending{border-left:5px solid var(--green);background:#f1f5ee}
+.ending-entry-title{display:flex;align-items:start;justify-content:space-between;gap:12px}.ending-entry-title h3{margin:0!important;font-size:20px}
+.ending-requirements{list-style:none;padding:0;margin:12px 0 0}.ending-requirements li{padding:5px 0;font-size:16px;color:var(--muted)}
+.ending-requirements li span{display:inline-block;min-width:98px;font-size:14px}.ending-requirements .requirement-met{color:var(--green)}
+
 </style>
 </head>
 
@@ -386,6 +395,71 @@ function roleEndings(result) {
   ];
 }
 
+function endingCatalog(result) {
+  const fullDay = ['女社员全天出工（2个半日）', result.motherField === 2];
+  const sufficientReturn = ['女社员净得至少6工分', result.motherNet >= 6];
+  const allCovered = ['主任采用全社统一评工', result.plan.evaluation === 2];
+  const heavyOpportunity = ['青年女队员实际取得半日重活机会', result.youthHeavy === 1];
+  const base = [fullDay, sufficientReturn];
+  const supported = [...base, allCovered, heavyOpportunity];
+  const mainRequirements = [
+    [['女社员实际只出工半天', result.motherField === 1]],
+    [fullDay, ['女社员净得少于6工分', result.motherNet < 6]],
+    [...base, ['评工沿用原标准或只在青年女队员所在组试行', result.plan.evaluation < 2]],
+    [...base, allCovered, ['青年女队员最终仍做全天普通劳动', result.youthHeavy === 0]],
+    [...supported, ['家庭分担协议实际执行，男社员接手半天照料', result.family]],
+    [...supported, ['女社员实际采用邻里付酬托儿', result.motherCareMode === 'private']],
+    [...supported, ['女社员实际使用集体托儿', result.motherCareMode === 'public']]
+  ];
+  const womanStandard = ['青年女队员所在组已统一评工（小组试行或全社统一）', result.plan.evaluation > 0];
+  const oldWomanStandard = ['青年女队员所在组仍采用原评工', result.plan.evaluation === 0];
+  const ordinary = ['青年女队员实际做全天普通劳动，包括申请未匹配后的备用行动', result.youthHeavy === 0];
+  const noGuidance = ['男社员未实际承担带工指导', !result.mentor];
+  const guidance = ['带工协议实际执行：主任提供试工、青年女队员实际参加、第一及第三组均同意', result.mentor];
+  const retained = ['男社员全天出工，青年女队员未取得正式轮岗，且未执行家庭分担', result.maleField === 2 && result.youthAction !== 'rotation' && !result.family];
+  const family = ['家庭分担协议实际执行：第二组选择家庭分担、第三组选择接手照料、双方均同意', result.family];
+  const roleRules = [
+    [
+      ['原有限制延续', [oldWomanStandard, ordinary]],
+      ['评价提高，岗位仍有限', [womanStandard, ordinary]],
+      ['承担重活，计价差距仍在', [oldWomanStandard, heavyOpportunity]],
+      ['得到试工认可，长期安排待定', [womanStandard, ['青年女队员实际参加带工试工', result.youthAction === 'trial']]],
+      ['进入正式任务分工', [womanStandard, ['青年女队员实际取得正式轮岗', result.youthAction === 'rotation']]]
+    ],
+    [
+      ['照料继续挤压出工', [['女社员实际只出工半天，自己照料另半天', result.motherField === 1]]],
+      ['全天出工，个人回报偏低', [fullDay, ['扣除本人托儿支出后，净得少于6工分', result.motherNet < 6]]],
+      ['家庭重新分担照料', [...base, family]],
+      ['全天出工，费用按协议分担', [...base, ['实际采用邻里托儿，按已接受的费用方案或自付备用方案结算', result.motherCareMode === 'private']]],
+      ['集体分担白天照料', [...base, ['主任开办托儿，且本局家庭实际使用', result.motherCareMode === 'public']]]
+    ],
+    [
+      ['保留原有重活安排', [retained, noGuidance]],
+      ['保留原有重活安排，并承担指导', [retained, guidance]],
+      ['接受轮岗，收入与任务调整', [['青年女队员取得正式轮岗，男社员接受全天派工（半天重活、半天普通劳动）', result.youthAction === 'rotation' && result.maleField === 2 && !result.family], noGuidance]],
+      ['只接重活，田间出勤减少', [['男社员实际只出工半天，且未承担家庭照料，包括备用行动形成的安排', result.maleField === 1 && !result.family], noGuidance]],
+      ['减少出工，承担家庭照料', [family, noGuidance]],
+      ['减少出工，承担家庭照料，并承担指导', [family, guidance]]
+    ],
+    [
+      ['出勤组织仍有限', [['三位示范社员合计出工少于6个半日', result.fieldTotal < 6]]],
+      ['动员增加，个人回报偏低', [['三人合计出工达到6个半日', result.fieldTotal === 6], ['女社员个人净得少于6工分', result.motherNet < 6]]],
+      ['本次配套形成，后续组织承压', [['三人合计出工达到6个半日', result.fieldTotal === 6], sufficientReturn, ['6点组织资源全部使用，余额为0', result.remaining === 0]]],
+      ['留有组织余地，仍需处理分配', [['三人合计出工达到6个半日', result.fieldTotal === 6], sufficientReturn, ['组织资源仍有余额（至少1点）', result.remaining > 0]]]
+    ]
+  ];
+  const entries = rules => rules.map(([title, requirements], index) => ({
+    id: index,
+    title,
+    requirements: requirements.map(([text, met]) => ({ text, met })),
+    matched: requirements.every(([, met]) => met)
+  }));
+  return {
+    main: entries(ENDINGS.map((ending, index) => [ending.title, mainRequirements[index]])),
+    roles: roleRules.map(entries)
+  };
+}
+
 function freshState() {
   return { version: 3, phase: -1, review: false, plan: freshPlan(), agreements: emptyAgreements(), confirmed: [false, false, false, false], checkpoints: [], notes: ['', '', ''], settled: false, finished: false, compare: { field: 'motherAction', value: 'home' } };
 }
@@ -425,6 +499,7 @@ const app = document.getElementById('app');
 const dialog = document.getElementById('dialog');
 let state = freshState();
 let storageAvailable = true;
+let endingCategory = 'main';
 try {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
   if (validateState(saved)) state = saved;
@@ -555,7 +630,15 @@ function resultCard(result) {
 }
 
 function resultScreen() {
-  return `${heading('结局揭晓', '同一天，四组走到了不同处境', '看看谁获得支持、谁执行备用安排、谁承担费用与额外劳动。')}${resultCard(currentResult())}<div class="round-actions"><button data-action="history">查看三场记录与账目</button><button data-action="undo-final">纠正本场执行</button><button class="primary" data-action="advance">试改一个行动或协议 →</button></div>`;
+  return `${heading('结局揭晓', '同一天，四组走到了不同处境', '看看谁获得支持、谁执行备用安排、谁承担费用与额外劳动。')}<div class="ending-tools"><button class="primary" data-action="all-endings">查看全部结局与达成要求</button></div>${resultCard(currentResult())}<div class="round-actions"><button data-action="history">查看三场记录与账目</button><button data-action="undo-final">纠正本场执行</button><button class="primary" data-action="advance">试改一个行动或协议 →</button></div>`;
+}
+
+function allEndingsHtml() {
+  const result = currentResult();
+  const catalog = endingCatalog(result);
+  const selected = endingCategory === 'main' ? catalog.main : catalog.roles[Number(endingCategory)];
+  const categories = [{ key: 'main', label: '合作社主结局' }, ...ROLES.map((role, index) => ({ key: String(index), label: `第${index + 1}组` }))];
+  return `<p>每项结局的下列条件须同时满足。所有结局均以预算平衡、四组分别确认并正式执行为前提。勾选依据为本局正式结果。</p><div class="ending-categories" aria-label="选择结局类别">${categories.map(category => `<button class="small" data-action="ending-category" data-category="${category.key}" aria-pressed="${endingCategory === category.key}">${category.label}</button>`).join('')}</div><p class="ending-context">本局女社员出工${result.motherField}个半日、净得${result.motherNet}分；三人合计出工${result.fieldTotal}个半日，组织资源余${result.remaining}点。</p><h3>${endingCategory === 'main' ? '七类合作社主结局' : ROLES[Number(endingCategory)].name + '的全部结局'}</h3>${selected.map(entry => `<article class="ending-entry ${entry.matched ? 'current-ending' : ''}"><div class="ending-entry-title"><h3>${entry.title}</h3>${entry.matched ? '<span class="pill">本局结局</span>' : ''}</div><ul class="ending-requirements">${entry.requirements.map(requirement => `<li class="${requirement.met ? 'requirement-met' : ''}"><span>${requirement.met ? '✓ 已满足' : '○ 未满足'}</span>${requirement.text}</li>`).join('')}</ul></article>`).join('')}<p class="after-note">合作社主结局依次判定，每组角色对应一种完整结局。试工持续性、费用分担、闲置支持和家务等情况，会在实际结局的详细说明中继续展示。</p>`;
 }
 
 function comparisonData() {
@@ -664,6 +747,8 @@ document.addEventListener('click', async event => {
     else if (action === 'advance') advance();
     else if (action === 'record-scene') recordScene();
     else if (action === 'rules') showDialog('独立行动版完整规则', rulesHtml());
+    else if (action === 'all-endings' && state.settled) { endingCategory = 'main'; showDialog('全部结局与达成要求', allEndingsHtml()); }
+    else if (action === 'ending-category' && state.settled) { endingCategory = button.dataset.category; showDialog('全部结局与达成要求', allEndingsHtml()); }
     else if (action === 'sources') showDialog('材料依据与模拟设定', sourcesHtml());
     else if (action === 'ledger') showDialog(state.settled ? '当日正式账目 · 与开局比较' : '当日意向试算 · 与开局比较', ledgerTable(baselineResult(), currentResult()));
     else if (action === 'execution') showDialog('原计划、实际行动与调整原因', executionSummary(currentResult()));
@@ -695,7 +780,7 @@ document.addEventListener('click', async event => {
     }
     else if (action === 'undo-final') showDialog('纠正本次执行', '<p>撤回正式执行并返回第二场。保留方案与协议供核对，四组需重新确认。旧结局在重新执行后重算。</p><button class="primary" data-action="confirm-undo">确认撤回并返回协商</button>');
     else if (action === 'confirm-undo') { dialog.close(); returnToNegotiation(); }
-    else if (action === 'show-ending') showDialog('正式结局', resultCard(currentResult()));
+    else if (action === 'show-ending') showDialog('正式结局', `<div class="ending-tools"><button class="primary" data-action="all-endings">查看全部结局与达成要求</button></div>${resultCard(currentResult())}`);
     else if (action === 'finish') { state.finished = true; render(); showMessage('本场协商已结束，正式结果和记录已保存。'); }
     else if (action === 'reset') showDialog('重新开始', '<p>本机本场的行动、协议、协商记录与结局将被清空，恢复开局安排。</p><div class="hero-buttons"><button data-action="close-dialog">保留当前进度</button><button class="primary" data-action="confirm-reset">确认重新开始</button></div>');
     else if (action === 'confirm-reset') { state = freshState(); dialog.close(); render(); window.scrollTo(0, 0); }
