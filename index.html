@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#732e31">
+<meta name="description" content="四组在同一农忙日自主选择行动，协商照料与费用，联动结算劳动、工分和不同结局。">
+<title>合作社的三场商议 · 课堂协商游戏</title>
+<style>
+
+    :root{--paper:#f5f1e7;--white:#fffdf8;--ink:#282e2a;--muted:#656b62;--line:#d9d6c9;--red:#732e31;--red-light:#f3e6e2;--green:#31584a;--green-light:#e6ede5;--ochre:#8b5e29;--ochre-light:#f4ead8;--blue:#365871;--blue-light:#e6edf1;--serif:"STSong","Songti SC","SimSun",serif;--sans:"Microsoft YaHei","PingFang SC",system-ui,sans-serif}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:18px;line-height:1.6}button,select,textarea{font:inherit}button,select{touch-action:manipulation}button{cursor:pointer;border:1px solid var(--line);background:var(--white);color:var(--ink);padding:10px 18px;border-radius:5px;transition:background .15s,transform .15s}button:hover:not(:disabled){background:#eee9dc}button:active:not(:disabled){transform:translateY(1px)}button:disabled{cursor:not-allowed;opacity:.48}button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--ochre);outline-offset:3px}.primary{background:var(--red);border-color:var(--red);color:white}.primary:hover:not(:disabled){background:#5c2225}.secondary{background:var(--green);border-color:var(--green);color:white}.secondary:hover:not(:disabled){background:#234137}.quiet{background:transparent}.small{font-size:15px;padding:7px 11px}.muted{color:var(--muted)}.eyebrow{color:var(--red);font-size:15px;letter-spacing:.13em;font-weight:700}h1,h2,h3,p{margin-top:0}h1,h2{font-family:var(--serif);font-weight:700}h1{font-size:clamp(44px,5vw,76px);line-height:1.18;letter-spacing:.02em;margin-bottom:20px}h2{font-size:clamp(30px,3vw,44px);line-height:1.3;margin-bottom:10px}h3{font-size:21px;line-height:1.45;margin-bottom:9px}p{margin-bottom:12px}.top{background:var(--red);color:#fff9ec;padding:15px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{font-family:var(--serif);font-size:25px;font-weight:700}.top-actions{display:flex;align-items:center;gap:9px}.top button{background:transparent;border-color:#ffffff45;color:#fff9ec}.top button:hover:not(:disabled){background:#ffffff18}.shell{max-width:1660px;margin:auto;padding:23px 32px 16px}.statusbar{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px}.resources{display:flex;align-items:center;gap:14px;white-space:nowrap}.resource-number{font-size:29px;font-weight:750;color:var(--red)}.dots{display:flex;gap:6px}.dot{width:12px;height:12px;border:1px solid var(--red);border-radius:50%;background:var(--red)}.dot.spent{background:transparent;border-color:#c8c4b8}.steps{display:flex;gap:22px;flex-wrap:wrap;font-size:16px;color:var(--muted)}.step{padding:5px 0;border-bottom:2px solid transparent}.step.active{color:var(--red);border-color:var(--red);font-weight:700}.step.done{color:var(--green)}.hero{display:grid;grid-template-columns:1.4fr 1fr;gap:45px;padding:28px 0}.hero-copy{max-width:780px}.hero-copy>p{font-size:20px;max-width:690px}.hero-side{border-left:1px solid var(--line);padding-left:32px;align-self:center}.hero-side p{margin-bottom:18px}.hero-buttons{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}.roles{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-top:20px}.role{background:var(--white);padding:21px;border:1px solid var(--line);border-top:4px solid var(--role-color,var(--red));border-radius:5px}.role p{font-size:16px}.role .goal{border-top:1px solid var(--line);padding-top:13px;margin:14px 0 0;font-size:17px}.role-number{color:var(--role-color,var(--red));font-size:14px;margin-bottom:10px;font-weight:700}.layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:25px}.stage-head{display:flex;justify-content:space-between;gap:20px;align-items:start;margin-bottom:18px}.lead{color:var(--muted);font-size:17px;margin-bottom:0}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.policy{padding:20px;background:var(--white);border:1px solid var(--line);border-radius:5px;position:relative}.policy.unavailable{background:#eae7de;color:#70746d}.policy-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}.letter{font-family:Georgia,serif;font-size:33px;line-height:1;color:var(--red)}.cost{font-size:15px;font-weight:700;padding:3px 9px;background:var(--ochre-light);border-radius:3px;white-space:nowrap}.policy h3{font-size:20px}.policy p{font-size:17px;line-height:1.65;margin-bottom:0}.notice{padding:11px 15px;background:var(--ochre-light);border-left:3px solid var(--ochre);font-size:16px;margin:15px 0}.vote-panel{background:var(--white);border:1px solid var(--line);border-radius:5px;margin-top:18px;overflow:hidden}.vote-title{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}.vote-title h3{margin:0;font-size:19px}.vote-row{display:grid;grid-template-columns:minmax(170px,1.3fr) 1fr 1fr 90px;gap:12px;align-items:center;padding:11px 18px;border-bottom:1px solid var(--line)}.vote-row:last-child{border-bottom:0}.vote-row.confirmed{background:#f1f4ed}.vote-role{font-size:17px;font-weight:650}.vote-group{font-size:13px;color:var(--muted);display:block;font-weight:400}.support{font-size:16px;padding:8px;line-height:1.5}.support[aria-pressed="true"]{background:var(--green-light);border-color:var(--green);color:#214b37;font-weight:700}.confirm-vote{font-size:15px;padding:8px 6px}.confirmed .confirm-vote{color:var(--green);border-color:#c3d1c0}.round-actions{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-top:18px}.aside{border-left:1px solid var(--line);padding-left:23px}.aside h3{font-size:18px}.agenda{list-style:none;margin:0 0 26px;padding:0}.agenda li{font-size:15px;color:var(--muted);padding:9px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}.agenda li.current{color:var(--red);font-weight:700}.note-label{display:block;font-size:16px;font-weight:700;margin-bottom:8px}textarea{resize:vertical;width:100%;border:1px solid var(--line);background:var(--white);border-radius:4px;padding:10px;font-size:15px;line-height:1.6;min-height:130px;color:var(--ink)}.aside-note{font-size:14px;color:var(--muted);margin-top:8px}.ledger{margin-top:23px}.ledger-item{padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}.ledger-item small{display:block;color:var(--muted);font-size:13px}.footer{margin-top:26px;padding-top:13px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:20px}.storage-warning{background:var(--ochre-light);padding:9px 20px;font-size:14px}.receipt{padding:25px;background:var(--white);border:1px solid var(--line);border-top:4px solid var(--green);border-radius:5px;margin-top:18px}.receipt h3{font-size:26px}.receipt-stats{display:flex;gap:30px;flex-wrap:wrap;margin:18px 0}.receipt-stat strong{display:block;font-size:30px;color:var(--green)}.receipt-stat span{font-size:15px;color:var(--muted)}.pill{display:inline-block;font-size:14px;padding:3px 9px;border-radius:3px;background:var(--green-light);color:var(--green)}.pill.pending{background:var(--ochre-light);color:var(--ochre)}.ending-title{font-size:clamp(29px,3vw,43px);margin-top:12px;line-height:1.35}.result-hero{background:var(--white);border:1px solid var(--line);border-left:5px solid var(--red);padding:25px 30px;margin-bottom:22px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.metric{background:var(--white);border:1px solid var(--line);padding:15px 19px;border-radius:4px}.metric b{font-size:32px;color:var(--red);display:block;font-variant-numeric:tabular-nums}.metric span{font-size:15px;color:var(--muted)}.details-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.detail-box{padding:21px;border:1px solid var(--line);background:var(--white);border-radius:5px}.detail-box p{font-size:17px}.detail-box ul{font-size:17px;margin:0;padding-left:21px}.role-outcomes{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}.role-result{background:var(--white);border:1px solid var(--line);padding:18px;border-radius:4px}.role-result h3{font-size:18px;margin-top:12px}.role-result p{font-size:15px;margin:0}.compare-controls{display:flex;gap:16px;align-items:end;background:var(--white);border:1px solid var(--line);padding:18px;margin-bottom:20px;flex-wrap:wrap}.compare-controls label{font-size:15px;display:block}.compare-controls select{display:block;max-width:100%;background:var(--white);border:1px solid var(--line);border-radius:4px;padding:9px 13px;margin-top:5px}.comparison{display:grid;grid-template-columns:1fr 1fr;gap:20px}.comparison .result-hero{padding:20px;margin-bottom:15px}.comparison .ending-title{font-size:27px}.comparison .metrics{gap:8px}.comparison .metric{padding:12px}.comparison .metric b{font-size:27px}.comparison .role-outcomes{grid-template-columns:1fr 1fr}.comparison .details-grid{grid-template-columns:1fr}.comparison .detail-box{padding:16px}.compare-label{font-size:17px;color:var(--green);margin-bottom:11px;font-weight:700}.question{font-size:clamp(29px,3.3vw,47px);font-family:var(--serif);line-height:1.55;max-width:1100px;margin:18px 0 28px}.discussion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.discussion-item{padding:22px;background:var(--white);border-top:3px solid var(--red)}.discussion-item p{font-size:18px}.reset-actions{display:flex;gap:12px;margin-top:25px}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:white;padding:12px 24px;border-radius:5px;z-index:20;box-shadow:0 4px 25px #0003;font-size:16px;max-width:90vw}.toast[hidden]{display:none}dialog{border:1px solid var(--line);border-radius:7px;width:min(1000px,94vw);max-height:88vh;padding:0;background:var(--paper);color:var(--ink);box-shadow:0 15px 70px #0004}dialog::backdrop{background:#172219b3}.dialog-head{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:20px 25px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper);z-index:1}.dialog-head h2{font-family:var(--sans);font-size:24px;margin:0}.dialog-body{padding:24px 27px}.dialog-body h3{margin-top:23px}.dialog-body h3:first-child{margin-top:0}.dialog-body p,.dialog-body li{font-size:17px}.dialog-body .cards{margin:12px 0 24px}.dialog-body table{width:100%;border-collapse:collapse;font-size:15px}.dialog-body th,.dialog-body td{border:1px solid var(--line);padding:10px;text-align:left}.dialog-body th{background:#ece8dd}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .vote-grid{display:grid;grid-template-columns:1fr 1fr}.vote-grid .vote-row{grid-template-columns:1fr 1fr 80px;padding:14px;border-bottom:1px solid var(--line)}.vote-grid .vote-role{grid-column:1/-1}.vote-grid .vote-group{display:inline;margin-left:9px}.vote-grid .vote-row:nth-child(odd){border-right:1px solid var(--line)}.vote-grid .vote-row:nth-last-child(-n+2){border-bottom:0}.policy.compact{padding:13px 16px}.policy.compact .policy-head{margin-bottom:8px}.policy.compact .letter{font-size:26px}.policy.compact h3{font-size:18px;margin:0}.voting-tip{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;font-size:15px}.discussion-call{padding:24px;margin-top:20px;background:var(--white);border:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:20px}.discussion-call p{margin:0;font-size:17px}
+    @media(min-width:1600px){body{font-size:20px}.policy p{font-size:19px}.vote-role{font-size:19px}.support{font-size:18px}.policy h3{font-size:22px}.vote-row{padding-top:14px;padding-bottom:14px}}
+    @media(max-width:1100px){.layout{grid-template-columns:1fr}.aside{border-left:0;border-top:1px solid var(--line);padding:18px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:20px}.agenda{margin-bottom:0}.ledger{margin-top:0}.roles,.role-outcomes{grid-template-columns:repeat(2,1fr)}.steps{gap:12px;font-size:14px}.hero{gap:22px}.hero-side{padding-left:22px}.shell{padding:20px}.top{padding:13px 20px}}
+    @media(max-width:720px){body{font-size:17px}.top{align-items:start;padding:12px 15px;gap:10px}.brand{font-size:19px;max-width:135px}.top-actions{flex-wrap:wrap;justify-content:end;gap:5px}.top-actions .small{font-size:12px;padding:6px}.statusbar{align-items:start;flex-direction:column;gap:12px}.hero{grid-template-columns:1fr;padding:13px 0}.hero-side{border-left:0;border-top:1px solid var(--line);padding:16px 0 0}.cards{grid-template-columns:1fr}.roles,.role-outcomes,.details-grid,.comparison,.discussion-grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.vote-row{grid-template-columns:1fr 1fr;gap:8px;padding:12px}.vote-role{grid-column:1/-1}.confirm-vote{grid-column:1/-1}.aside{grid-template-columns:1fr}.round-actions{align-items:stretch;flex-direction:column}.footer{flex-direction:column;gap:5px}.comparison .role-outcomes{grid-template-columns:1fr}.dialog-body{padding:16px}.dialog-body table{font-size:13px}.dialog-body th,.dialog-body td{padding:6px}.stage-head{gap:8px}.stage-head h2{font-size:30px}.shell{padding:16px}.policy{padding:18px}}
+    @media(max-width:720px){.vote-grid{grid-template-columns:1fr}.vote-grid .vote-row{grid-template-columns:1fr 1fr}.vote-grid .vote-row:nth-child(odd){border-right:0}.vote-grid .vote-row:nth-last-child(-n+2){border-bottom:1px solid var(--line)}.vote-grid .vote-row:last-child{border-bottom:0}.discussion-call{align-items:stretch;flex-direction:column}.voting-tip{align-items:start;flex-direction:column}.policy.compact{padding:12px}.policy.compact .policy-head{margin-bottom:4px}}
+    @media(min-width:1101px) and (max-height:850px){.top{padding:8px 24px}.shell{padding:12px 24px}.statusbar{margin-bottom:12px}.steps{font-size:14px;gap:16px}.resource-number{font-size:26px}.layout{grid-template-columns:1fr}.aside{display:none}.stage-head{margin-bottom:12px}.stage-head h2{font-size:33px;margin-bottom:5px}.lead{font-size:16px}.policy.compact{padding:10px 14px}.policy.compact .policy-head{margin-bottom:5px}.policy.compact h3{font-size:17px}.voting-tip{margin-top:8px}.vote-panel{margin-top:12px}.vote-title{padding:9px 15px}.vote-grid .vote-row{padding:10px 15px;gap:8px}.vote-role{font-size:16px}.support,.confirm-vote{padding:6px}.round-actions{margin-top:12px}.footer{margin-top:15px;padding-top:8px}.receipt{padding:20px}.hero{padding:18px 0}.hero h1{font-size:55px}.hero-copy>p{font-size:18px}.role{padding:16px}.role p{font-size:15px}.role .goal{font-size:16px}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+    @media print{.top-actions,.round-actions,.aside,button,.compare-controls,.steps,.footer{display:none!important}body{background:white;font-size:12pt}.shell{padding:0}.role-outcomes,.roles{grid-template-columns:repeat(2,1fr)}.role,.role-result,.result-hero{break-inside:avoid}.comparison{display:block}}
+  
+.agreement{background:var(--white);border:1px solid var(--line);border-left:4px solid var(--green);padding:17px 21px;border-radius:5px;margin-top:18px}
+.agreement p{font-size:17px;margin-bottom:8px}.agreement h3{margin-bottom:7px}
+.agreement-buttons{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:10px}
+.agreement-status{font-size:15px;color:var(--green);font-weight:700}
+.agreement button[aria-pressed="true"]{background:var(--green-light);border-color:var(--green);color:var(--green);font-weight:700}
+.agreement.condensed{padding:11px 16px;margin-top:12px}.agreement.condensed p{font-size:15px}
+.receipt-head{display:flex;justify-content:space-between;align-items:start;gap:18px}.receipt-head .cost{white-space:nowrap}
+.receipt p{font-size:17px}.receipt h3{margin-bottom:10px}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:5px;background:var(--white)}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th,td{text-align:left;padding:13px 15px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#ebe7dc;font-size:15px}tbody tr:last-child td{border-bottom:0}
+.ledger-table{min-width:0;width:100%;table-layout:fixed}
+.ledger-table th:nth-child(1){width:16%}.ledger-table th:nth-child(2){width:17%}
+.ledger-table th:nth-child(3){width:21%}.ledger-table th:nth-child(4){width:23%}.ledger-table th:nth-child(5){width:23%}
+.ledger-table td p{margin:0 0 5px}
+.number-change{font-size:25px;font-weight:750;color:var(--red);white-space:nowrap;font-variant-numeric:tabular-nums}
+.delta{font-size:12px;margin-left:6px;color:var(--muted);white-space:nowrap}
+.row-caption{display:block;font-size:13px;color:var(--muted);margin-top:4px}
+.section-label{display:flex;justify-content:space-between;align-items:end;gap:15px;margin:20px 0 11px}
+.section-label h3{margin:0}.section-label span{font-size:14px;color:var(--muted)}
+.after-note{font-size:15px;color:var(--muted);margin-top:12px}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+.outcome-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px;margin-top:20px}
+.outcome{background:var(--white);border:1px solid var(--line);border-top:4px solid var(--role-color,var(--red));border-radius:5px;padding:22px}
+.outcome h3{font-family:var(--serif);font-size:26px}.outcome p{font-size:17px}
+.role-name{font-size:14px;color:var(--role-color,var(--red));font-weight:700;margin-bottom:10px}
+.message{background:var(--ochre-light);border-bottom:1px solid var(--line);padding:9px 26px;font-size:16px}
+.comparison .outcome-grid{grid-template-columns:1fr}.comparison h2{font-size:29px}.comparison .outcome{padding:18px}
+.comparison .metrics{grid-template-columns:1fr 1fr}
+.hero-side h2{font-size:34px;color:var(--red)}
+.dialog-body .roles{grid-template-columns:1fr 1fr}
+@media(min-width:1600px){table{font-size:18px}.ledger-table th{font-size:17px}}
+@media(min-width:1101px) and (max-height:850px){
+ .agreement.condensed{padding:8px 15px}.agreement.condensed h3{font-size:18px}
+ .agreement.condensed p{margin-bottom:4px}.agreement-buttons{margin-top:6px}
+ .vote-title{padding:8px 15px}.vote-grid .vote-row{padding:8px 15px}
+ .receipt{padding:17px 22px}.ledger-table th,.ledger-table td{padding:10px 12px}
+ .section-label{margin-top:16px}.stage-head{margin-bottom:12px}
+}
+@media(max-width:720px){
+ .outcome-grid,.dialog-body .roles{grid-template-columns:1fr}
+ .receipt-head,.section-label{align-items:stretch;flex-direction:column}
+ .agreement{padding:15px}.comparison .outcome-grid{grid-template-columns:1fr}
+ .top-actions{max-width:220px}.top .brand{min-width:115px}
+}
+
+.action-grid,.execution-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px;margin:19px 0}
+.action-card,.execution-card{padding:21px;background:var(--white);border:1px solid var(--line);border-top:4px solid var(--role-color,var(--red));border-radius:5px;min-width:0}
+.action-card h3{margin-bottom:17px}.choice-label{display:block;font-size:16px;font-weight:700;margin:12px 0}
+.choice-label select{display:block;width:100%;max-width:100%;font:400 17px/1.5 var(--sans);color:var(--ink);background:var(--white);border:1px solid var(--line);border-radius:4px;padding:10px;margin-top:6px}
+.field-note{font-size:15px;color:var(--muted);margin-top:12px;margin-bottom:0}
+.agreement-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px;margin:20px 0}
+.agreement-grid .agreement{margin:0;min-width:0}.agreement-grid .agreement:last-child{grid-column:1/-1}
+.agreement-grid .agreement p{font-size:16px}.fee-proposal{margin-top:14px}
+.budget-strip{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;background:var(--green-light);border-left:4px solid var(--green);padding:14px 18px;margin:20px 0;font-size:17px}
+.budget-error p{margin:7px 0}.budget-error{border-left-color:var(--red)}
+.execution-card .requested{font-size:15px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:12px}
+.execution-card h3{font-size:23px}.execution-card p{font-size:17px}.execution-card .role-number{margin-bottom:13px}
+.adjustments{background:#f0ede3;padding:11px 14px;margin:12px 0;font-size:15px}
+.adjustments p{font-size:15px;margin-bottom:6px}.adjustments p:last-child{margin-bottom:0}
+.confirmed-card{box-shadow:inset 0 0 0 2px #bfd0bd}.confirmed-card button{color:var(--green);border-color:var(--green)}
+.execution-card button{width:100%;margin-top:8px}
+.top-actions{flex-wrap:wrap;justify-content:flex-end}.statusbar{flex-wrap:wrap}
+.dialog-body .execution-grid{grid-template-columns:1fr}.dialog-body .execution-card{padding:17px}
+@media(min-width:1600px){.choice-label select{font-size:20px}.execution-card p,.action-card p{font-size:19px}.action-card h3{font-size:25px}}
+@media(max-width:720px){.action-grid,.execution-grid,.agreement-grid{grid-template-columns:1fr}.agreement-grid .agreement:last-child{grid-column:auto}.action-card,.execution-card{padding:17px}.choice-label select{font-size:16px}.budget-strip{flex-direction:column}.top-actions{max-width:240px}.step{font-size:12px}}
+@media(max-width:720px){.ledger-table{min-width:850px}}
+@media print{.execution-card,.action-card{break-inside:avoid}.agreement-grid{display:block}}
+
+</style>
+</head>
+
+<body>
+<header class="top">
+  <div class="brand">合作社的三场商议</div>
+  <div class="top-actions">
+    <button class="small" data-action="rules">完整规则</button>
+    <button class="small" data-action="ledger">当日四组账目</button>
+    <button class="small" data-action="notes" id="notes-button" hidden>协商记录</button>
+    <button class="small" data-action="fullscreen">全屏投影</button>
+    <button class="small" data-action="reset">重新开始</button>
+  </div>
+</header>
+<div class="storage-warning" id="storage-warning" hidden>当前浏览器无法保存进度，请保持此页面打开。</div>
+<div class="message" id="message" role="status" hidden></div>
+<main class="shell">
+  <div class="statusbar">
+    <nav class="steps" id="steps" aria-label="游戏进程"></nav>
+    <div class="resources"><span id="resource-label">组织资源预计余量</span><span class="dots" id="resource-dots" aria-hidden="true"></span><span><b class="resource-number" id="resources">6</b> / 6</span></div>
+  </div>
+  <div id="app"></div>
+  <footer class="footer"><span>1950年代中期 · 虚构农业生产合作社 · 材料取自导修节选，数值与行动机制为课堂设定</span><span id="save-status">单机主持 · 可离线使用</span></footer>
+</main>
+<dialog id="dialog" aria-labelledby="dialog-title"><div class="dialog-head"><h2 id="dialog-title"></h2><button class="small" data-action="close-dialog" autofocus>关闭</button></div><div class="dialog-body" id="dialog-body"></div></dialog>
+
+<script id="game-engine">
+'use strict';
+
+const ROLES = [
+  { name: '青年女队员', color: '#732e31', concern: '已经参加田间劳动，下工后仍有家务。希望劳动得到同等评价，也能获得原由男子承担的任务。', interest: '自己选择普通劳动、正式轮岗申请或带工试工申请。' },
+  { name: '有幼儿的女社员', color: '#31584a', concern: '家庭互助只能代看半天。希望增加个人所得，也要安排幼儿照料。', interest: '选择照料方式，与第三组协商半天照料或4工分托儿报酬。' },
+  { name: '家庭主要男劳动力', color: '#805724', concern: '与第二组属于同一家庭。依赖重活收入，也会从妻子收入改善中受益。', interest: '自己选择出工方式，决定是否承担照料、费用和额外指导。' },
+  { name: '合作社主任', color: '#365871', concern: '组织农忙出工、协调岗位和分配，同时为后续留下组织资源。', interest: '在6点资源内选择评工覆盖、岗位支持与集体托儿。' }
+];
+
+const PHASE_NAMES = ['角色准备', '第一场 · 公布意向', '第二场 · 协商调整', '第三场 · 分别确认', '结局揭晓', '重选比较', '回到主题'];
+const CHOICES = {
+  evaluation: [
+    { value: 0, title: '沿用原评工 · 0点' },
+    { value: 1, title: '青年女队员所在组试行统一标准 · 1点' },
+    { value: 2, title: '全社统一评工标准 · 2点' }
+  ],
+  job: [
+    { value: 'original', title: '维持原派工 · 0点' },
+    { value: 'rotation', title: '提供正式轮岗 · 1点' },
+    { value: 'trial', title: '提供带工试工 · 2点，可按协议减1点' }
+  ],
+  publicCare: [
+    { value: false, title: '暂不开办集体托儿 · 0点' },
+    { value: true, title: '组织农忙保娃组 · 3点' }
+  ],
+  youthAction: [
+    { value: 'ordinary', title: '做全天普通劳动' },
+    { value: 'rotation', title: '申请正式轮岗' },
+    { value: 'trial', title: '申请带工试工' }
+  ],
+  motherAction: [
+    { value: 'home', title: '自己照料半天、出工半天' },
+    { value: 'private', title: '邻里托儿，按费用方案付酬' },
+    { value: 'public', title: '使用集体托儿' },
+    { value: 'family', title: '请男社员接手半天照料' }
+  ],
+  motherFallback: [
+    { value: 'home', title: '备用：自己照料半天' },
+    { value: 'privateSelf', title: '备用：邻里托儿，自己付全部4分' }
+  ],
+  maleAction: [
+    { value: 'assigned', title: '按最终派工出工全天' },
+    { value: 'heavyOnly', title: '只接受分到的重活' },
+    { value: 'care', title: '接手半天照料、半天重活' }
+  ],
+  maleFallback: [
+    { value: 'assigned', title: '备用：按最终派工出工全天' },
+    { value: 'heavyOnly', title: '备用：只接受分到的重活' }
+  ],
+  maleFee: [0, 1, 2, 3, 4].map(value => ({ value, title: `男社员付${value}分，女社员付${4 - value}分` }))
+};
+
+const FIELD_LABELS = {
+  evaluation: '第四组 · 评工覆盖', job: '第四组 · 岗位支持', publicCare: '第四组 · 集体托儿',
+  youthAction: '第一组 · 当日行动', motherAction: '第二组 · 照料行动', motherFallback: '第二组 · 备用行动',
+  maleAction: '第三组 · 当日行动', maleFallback: '第三组 · 备用行动', maleFee: '夫妻 · 托儿费用方案'
+};
+
+const AGREEMENTS = {
+  family: { name: '家庭分担协议', signers: [1, 2], description: '第二组选择家庭分担、第三组选择接手照料，且双方同意时，女社员全天出工，男社员半天出工、半天照料。' },
+  fee: { name: '托儿费用协议', signers: [1, 2], description: '邻里托儿合计4分。男社员承担任何费用都需双方确认当前数额。未达成时，第二组执行自己登记的备用行动。' },
+  mentor: { name: '带工协议', signers: [0, 2], description: '第一组实际参加主任提供的试工且双方同意时，男社员额外承担1项无工分指导，组织成本由2点减为1点。' }
+};
+
+const ENDINGS = [
+  { title: '照料继续限制出工', text: '有幼儿的女社员最终只能出工半天。评工或岗位可能已经调整，她的全天出工条件仍受到照料安排限制。' },
+  { title: '出工增加，个人回报偏低', text: '女社员能够全天出工，扣除本人托儿支出后净得少于6分。需要同时比较个人所得、夫妻合计与照料责任。' },
+  { title: '劳动评价的改善覆盖有限', text: '女社员全天出工且净得至少6分，评工仍沿用原标准或只在一个小组试行。费用重新分担也可能改善个人所得，劳动评价的覆盖仍需继续讨论。' },
+  { title: '劳动回报改善，岗位分工延续', text: '全社已统一评工，女社员能全天出工、净得至少6分。青年女队员最终仍做普通劳动，需要结合其原计划、个人选择与岗位支持看原因。' },
+  { title: '家庭重新分工', text: '青年女队员获得重活机会，家庭分担协议也实际执行。男社员少出半天工、接手照料，女社员全天出工。三人合计仍为5个半日。' },
+  { title: '机会与回报改善，家庭承担照料成本', text: '全社统一评工，青年女队员获得重活机会，女社员全天出工并净得至少6分。家庭合计转付4分给邻里照料者，个人负担取决于费用协商。' },
+  { title: '本次农忙形成集体配套', text: '全社统一评工、青年女队员获得重活机会，本局家庭实际使用集体托儿。岗位的持续性、额外指导劳动与后续组织资源仍需继续商议。' }
+];
+
+function freshPlan() {
+  return { evaluation: 0, job: 'original', publicCare: false, youthAction: 'ordinary', motherAction: 'home', motherFallback: 'home', maleAction: 'assigned', maleFallback: 'assigned', maleFee: 0 };
+}
+
+function emptyAgreements() {
+  return { family: [false, false], fee: [false, false], mentor: [false, false] };
+}
+
+function bothApproved(approvals) {
+  return approvals.every(value => value === true);
+}
+
+function validPlan(plan) {
+  return plan && Object.keys(CHOICES).every(key => CHOICES[key].some(option => option.value === plan[key]));
+}
+
+function validAgreements(agreements) {
+  return agreements && Object.keys(AGREEMENTS).every(key => Array.isArray(agreements[key]) && agreements[key].length === 2 && agreements[key].every(value => typeof value === 'boolean'));
+}
+
+function choiceTitle(field, value) {
+  return CHOICES[field].find(option => option.value === value)?.title ?? '未选择';
+}
+
+function resolveDay(plan, agreements) {
+  if (!validPlan(plan) || !validAgreements(agreements)) throw new Error('行动或协议数据无效。');
+  const notices = [];
+  const adjustments = [[], [], [], []];
+  const addNotice = (group, text) => {
+    adjustments[group].push(text);
+    notices.push({ group, text });
+  };
+
+  // First match care and fees. A failed proposal uses the mother's registered fallback.
+  let motherCareMode = plan.motherAction;
+  let motherFee = 0;
+  let maleFee = 0;
+  let family = false;
+  let feeAgreement = false;
+  let careFailure = '';
+  if (motherCareMode === 'public' && !plan.publicCare) careFailure = '主任未开办集体托儿';
+  if (motherCareMode === 'family') {
+    family = plan.maleAction === 'care' && bothApproved(agreements.family);
+    if (!family) careFailure = plan.maleAction !== 'care' ? '男社员未选择接手照料' : '家庭分担协议未获双方同意';
+  }
+  if (motherCareMode === 'private') {
+    feeAgreement = plan.maleFee > 0 && bothApproved(agreements.fee);
+    if (plan.maleFee > 0 && !feeAgreement) careFailure = '托儿费用协议未获双方同意';
+    else {
+      maleFee = plan.maleFee;
+      motherFee = 4 - maleFee;
+    }
+  }
+  if (careFailure) {
+    motherCareMode = plan.motherFallback === 'privateSelf' ? 'private' : 'home';
+    motherFee = motherCareMode === 'private' ? 4 : 0;
+    maleFee = 0;
+    family = false;
+    feeAgreement = false;
+    addNotice(1, `${careFailure}，执行${choiceTitle('motherFallback', plan.motherFallback)}。`);
+  }
+
+  let maleAction = plan.maleAction;
+  if (maleAction === 'care' && !family) {
+    maleAction = plan.maleFallback;
+    addNotice(2, `本日未执行家庭分担，改为${choiceTitle('maleFallback', plan.maleFallback)}。`);
+  }
+
+  // Then allocate tasks. Formal rotation reserves one old heavy-work slot for the woman.
+  let youthAction = plan.youthAction;
+  if (youthAction !== 'ordinary' && plan.job !== youthAction) {
+    youthAction = 'ordinary';
+    addNotice(0, `主任未提供所申请的岗位支持，执行备用行动：全天普通劳动。`);
+  }
+  const rotation = youthAction === 'rotation';
+  const trial = youthAction === 'trial';
+  const mentor = trial && bothApproved(agreements.mentor);
+  const youthHeavy = youthAction === 'ordinary' ? 0 : 1;
+  const youthPoints = (plan.evaluation > 0 ? 10 : 6) + youthHeavy;
+  const heavyAvailable = rotation ? 1 : 2;
+  let maleField = 2;
+  let maleHeavy = heavyAvailable;
+  let maleGross = rotation ? 11 : 12;
+  if (maleAction === 'heavyOnly') {
+    maleField = heavyAvailable;
+    maleGross = heavyAvailable * 6;
+    if (rotation) addNotice(2, '正式轮岗已分出一个半日重活；本人只接剩余重活，出工半天、记6分。');
+  }
+  if (maleAction === 'care') {
+    maleField = 1;
+    maleHeavy = 1;
+    maleGross = 6;
+  }
+  if (rotation && maleAction === 'assigned') addNotice(2, '接受正式轮岗后的派工：半天重活、半天普通劳动，记11分。');
+
+  const motherField = motherCareMode === 'home' ? 1 : 2;
+  const motherDaily = plan.evaluation === 2 ? 10 : 6;
+  const motherGross = motherDaily * motherField / 2;
+  const motherNet = motherGross - motherFee;
+  const maleNet = maleGross - maleFee;
+  const motherCare = motherCareMode === 'home' ? 1 : 0;
+  const maleCare = family ? 1 : 0;
+  const careCredit = motherCareMode === 'public' ? 4 : 0;
+  const neighborTransfer = motherCareMode === 'private' ? 4 : 0;
+  const evaluationCost = plan.evaluation;
+  const jobCost = { original: 0, rotation: 1, trial: 2 }[plan.job] - (mentor ? 1 : 0);
+  const publicCareCost = plan.publicCare ? 3 : 0;
+  const spent = evaluationCost + jobCost + publicCareCost;
+  const remaining = 6 - spent;
+  const fieldTotal = 2 + motherField + maleField;
+  const householdPoints = motherNet + maleNet;
+  const collectivePoints = youthPoints + motherGross + maleGross + careCredit;
+  const supportUnused = [];
+  if (plan.job !== 'original' && youthAction !== plan.job) supportUnused.push('岗位支持已组织，本局未使用，组织成本保留。');
+  if (plan.publicCare && motherCareMode !== 'public') supportUnused.push('集体托儿已组织，本局家庭未使用，3点组织成本保留；本局照料示范账不新增4分。');
+  supportUnused.forEach(text => addNotice(3, text));
+  if (plan.job === 'trial' && !mentor) addNotice(3, '带工协议未实际执行，试工按原成本2点核算。');
+  const budgetError = remaining < 0 ? `预计花费${spent}点，超过6点预算${-remaining}点。主任须调整组合后才能正式确认。` : '';
+
+  let ending = 0;
+  if (motherField === 1) ending = 0;
+  else if (motherNet < 6) ending = 1;
+  else if (plan.evaluation < 2) ending = 2;
+  else if (youthHeavy === 0) ending = 3;
+  else if (family) ending = 4;
+  else if (motherCareMode === 'private') ending = 5;
+  else ending = 6;
+
+  const actual = [
+    { title: { ordinary: '全天普通劳动', rotation: '半天普通劳动、半天正式重活', trial: '半天普通劳动、半天重活试工' }[youthAction], details: `记${youthPoints}分；家务仍为2项。` },
+    { title: { home: '自己照料半天、出工半天', private: '全天出工、使用邻里托儿', public: '全天出工、使用集体托儿', family: '全天出工、男社员接手半天照料' }[motherCareMode], details: `毛工分${motherGross}，个人托儿支出${motherFee}，净得${motherNet}；家务2项。` },
+    { title: { assigned: '接受最终派工', heavyOnly: '只做分到的重活', care: '半天重活、半天照料' }[maleAction], details: `出工${maleField}个半日，毛工分${maleGross}，托儿支出${maleFee}，净得${maleNet}，额外指导${mentor ? 1 : 0}项。` },
+    { title: `组织资源花${spent}点、剩${remaining}点`, details: `三人出工${fieldTotal}个半日，示范记工合计${collectivePoints}分。` }
+  ];
+  return { plan, youthAction, motherCareMode, maleAction, family, feeAgreement, mentor,
+    youthPoints, youthHeavy, motherField, motherDaily, motherGross, motherFee, motherNet, motherCare,
+    maleField, maleHeavy, maleGross, maleFee, maleNet, malePoints: maleNet, maleCare, guidance: mentor ? 1 : 0,
+    householdPoints, fieldTotal, careCredit, neighborTransfer, collectivePoints,
+    evaluationCost, jobCost, publicCareCost, spent, remaining, valid: remaining >= 0, budgetError,
+    notices, adjustments, supportUnused, actual, ending, title: ENDINGS[ending].title, narrative: ENDINGS[ending].text };
+}
+
+function baselineResult() {
+  return resolveDay(freshPlan(), emptyAgreements());
+}
+
+function resultTags(result) {
+  const tags = [['原评工延续', '小组试行，覆盖有限', '全社统一评工'][result.plan.evaluation]];
+  if (result.youthAction === 'rotation') tags.push('正式轮岗');
+  if (result.youthAction === 'trial') tags.push('临时试工，长期待定');
+  if (result.mentor) tags.push('个人承担额外指导');
+  if (result.family) tags.push('家庭分担照料');
+  if (result.motherCareMode === 'private') tags.push(`托儿女付${result.motherFee}分、男付${result.maleFee}分`);
+  if (result.fieldTotal < 6) tags.push(`合计出工${result.fieldTotal}个半日`);
+  tags.push(result.remaining === 0 ? '组织资源用尽' : `组织资源余${result.remaining}点`);
+  return tags;
+}
+
+function roleEndings(result) {
+  let youthTitle = '原有限制延续';
+  if (result.plan.evaluation > 0 && result.youthHeavy === 0) youthTitle = '评价提高，岗位仍有限';
+  if (result.plan.evaluation === 0 && result.youthHeavy > 0) youthTitle = '承担重活，计价差距仍在';
+  if (result.plan.evaluation > 0 && result.youthAction === 'trial') youthTitle = '得到试工认可，长期安排待定';
+  if (result.plan.evaluation > 0 && result.youthAction === 'rotation') youthTitle = '进入正式任务分工';
+  let motherTitle = '照料继续挤压出工';
+  if (result.motherField === 2 && result.motherNet < 6) motherTitle = '全天出工，个人回报偏低';
+  else if (result.family) motherTitle = '家庭重新分担照料';
+  else if (result.motherCareMode === 'private') motherTitle = '全天出工，费用按协议分担';
+  else if (result.motherCareMode === 'public') motherTitle = '集体分担白天照料';
+  let maleTitle = result.maleField === 1 ? '只接重活，田间出勤减少' : result.youthAction === 'rotation' ? '接受轮岗，收入与任务调整' : '保留原有重活安排';
+  if (result.family) maleTitle = '减少出工，承担家庭照料';
+  if (result.mentor) maleTitle += '，并承担指导';
+  let directorTitle = '留有组织余地，仍需处理分配';
+  if (result.fieldTotal < 6) directorTitle = '出勤组织仍有限';
+  else if (result.motherNet < 6) directorTitle = '动员增加，个人回报偏低';
+  else if (result.remaining === 0) directorTitle = '本次配套形成，后续组织承压';
+  return [
+    { title: youthTitle,
+      gain: `${result.actual[0].title}，本日记${result.youthPoints}分。${result.plan.evaluation > 0 ? '本组采用统一评工标准。' : '本组沿用原评工标准。'}`,
+      cost: `田间劳动2个半日，重活${result.youthHeavy}个半日，家务仍为2项。`,
+      future: `${result.adjustments[0].join('')}${result.youthAction === 'trial' ? '试工后的长期安排仍待商议。' : '还需继续考虑机会、劳动条件与家庭负担。'}` },
+    { title: motherTitle,
+      gain: `本日出工${result.motherField}个半日，毛工分${result.motherGross}，净得${result.motherNet}。夫妻家庭合计${result.householdPoints}分，开局15分。`,
+      cost: `本人托儿支出${result.motherFee}分，自己照料${result.motherCare}个半日，家务仍为2项。男社员承担托儿费${result.maleFee}分、照料${result.maleCare}个半日。`,
+      future: `${result.adjustments[1].join('')}个人所得与家庭合计要同时比较。照料安排之外，做饭、缝补等家务仍待分担。` },
+    { title: maleTitle,
+      gain: `毛工分${result.maleGross}，净得${result.maleNet}；夫妻合计${result.householdPoints}分。本人出工${result.maleField}个半日，重活${result.maleHeavy}个。`,
+      cost: `支付托儿费${result.maleFee}分，承担${result.maleCare}个半日照料、${result.guidance}项额外无工分指导。`,
+      future: `${result.adjustments[2].join('')}本人收入、家庭收入和劳动分担可能朝不同方向变化，仍可继续协商。` },
+    { title: directorTitle,
+      gain: `三人合计出工${result.fieldTotal}个半日，开局5个。示范记工总额${result.collectivePoints}分，含实际集体托儿新增记工${result.careCredit}分。`,
+      cost: `组织资源花${result.spent}点、剩${result.remaining}点。${result.mentor ? '带工协议节省1点，个人承担1项额外指导。' : ''}${result.supportUnused.join('')}`,
+      future: result.remaining === 0 ? '下次农忙仍需筹措人手和资源。记工变化的实际分配还取决于收成和总工分。' : '继续关注支持的使用、评工覆盖、岗位持续性与家庭内部负担。' }
+  ];
+}
+
+function freshState() {
+  return { version: 3, phase: -1, review: false, plan: freshPlan(), agreements: emptyAgreements(), confirmed: [false, false, false, false], checkpoints: [], notes: ['', '', ''], settled: false, finished: false, compare: { field: 'motherAction', value: 'home' } };
+}
+
+function capture(state) {
+  return { plan: structuredClone(state.plan), agreements: structuredClone(state.agreements) };
+}
+
+function validateState(candidate) {
+  if (!candidate || candidate.version !== 3 || !Number.isInteger(candidate.phase) || candidate.phase < -1 || candidate.phase > 6) return false;
+  if (!validPlan(candidate.plan) || !validAgreements(candidate.agreements)) return false;
+  if (typeof candidate.review !== 'boolean' || typeof candidate.settled !== 'boolean' || typeof candidate.finished !== 'boolean') return false;
+  if (!Array.isArray(candidate.confirmed) || candidate.confirmed.length !== 4 || candidate.confirmed.some(value => typeof value !== 'boolean')) return false;
+  if (!Array.isArray(candidate.notes) || candidate.notes.length !== 3 || candidate.notes.some(note => typeof note !== 'string')) return false;
+  if (!Array.isArray(candidate.checkpoints) || candidate.checkpoints.length > 3) return false;
+  if (candidate.checkpoints.some(checkpoint => !checkpoint || !validPlan(checkpoint.plan) || !validAgreements(checkpoint.agreements))) return false;
+  const expected = candidate.phase <= 0 ? 0 : candidate.phase <= 3 ? candidate.phase - 1 + Number(candidate.review) : 3;
+  if (candidate.checkpoints.length !== expected) return false;
+  if (candidate.review && (candidate.phase < 1 || candidate.phase > 3)) return false;
+  if (candidate.settled !== (candidate.phase >= 4 || candidate.phase === 3 && candidate.review)) return false;
+  if (candidate.settled && (!candidate.confirmed.every(Boolean) || !resolveDay(candidate.plan, candidate.agreements).valid)) return false;
+  if (candidate.phase >= 1 && candidate.review || candidate.settled) {
+    const latest = candidate.checkpoints.at(-1);
+    if (JSON.stringify(latest.plan) !== JSON.stringify(candidate.plan) || JSON.stringify(latest.agreements) !== JSON.stringify(candidate.agreements)) return false;
+  }
+  if (!candidate.compare || !(candidate.compare.field in CHOICES || candidate.compare.field in AGREEMENTS)) return false;
+  if (candidate.compare.field in CHOICES) return CHOICES[candidate.compare.field].some(option => option.value === candidate.compare.value);
+  return typeof candidate.compare.value === 'boolean';
+}
+
+</script>
+<script id="game-interface">
+'use strict';
+
+const STORAGE_KEY = 'cooperative-three-meetings-v3';
+const app = document.getElementById('app');
+const dialog = document.getElementById('dialog');
+let state = freshState();
+let storageAvailable = true;
+try {
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  if (validateState(saved)) state = saved;
+} catch (error) { storageAvailable = false; }
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); storageAvailable = true; }
+  catch (error) { storageAvailable = false; }
+  document.getElementById('storage-warning').hidden = storageAvailable;
+  document.getElementById('save-status').textContent = state.phase < 0 ? '单机主持 · 可离线使用' : '本机进度已保存 · 主持人自主推进';
+}
+
+function showMessage(message) {
+  const element = document.getElementById('message');
+  element.hidden = !message;
+  element.textContent = message;
+}
+
+function heading(label, title, lead) {
+  return `<div class="stage-head"><div><div class="eyebrow">${label}</div><h2>${title}</h2><p class="lead">${lead}</p></div></div>`;
+}
+
+function roleCards() {
+  return `<div class="roles">${ROLES.map((role, index) => `<article class="role" style="--role-color:${role.color}"><div class="role-number">第${index + 1}组</div><h3>${role.name}</h3><p>${role.concern}</p><p class="goal">${role.interest}</p></article>`).join('')}</div>`;
+}
+
+function currentResult() { return resolveDay(state.plan, state.agreements); }
+
+function selectField(field, label) {
+  return `<label class="choice-label">${label}<select data-plan="${field}" aria-label="${FIELD_LABELS[field]}">${CHOICES[field].map((option, index) => `<option value="${index}" ${option.value === state.plan[field] ? 'selected' : ''}>${option.title}</option>`).join('')}</select></label>`;
+}
+
+function actionForms() {
+  return `<div class="action-grid">
+    <section class="action-card" style="--role-color:${ROLES[0].color}"><div class="role-number">第一组 · 自主行动</div><h3>${ROLES[0].name}</h3>${selectField('youthAction', '今天想做什么')}<p class="field-note">备用行动固定为全天普通劳动。岗位支持未匹配时，系统显示原因并执行备用。</p></section>
+    <section class="action-card" style="--role-color:${ROLES[1].color}"><div class="role-number">第二组 · 照料与备用</div><h3>${ROLES[1].name}</h3>${selectField('motherAction', '照料与出工安排')}${selectField('motherFallback', '条件未满足时，由本组选择的备用')}<p class="field-note">家庭分担需要第三组选择接手并签约；邻里托儿由家庭合计付4分。</p></section>
+    <section class="action-card" style="--role-color:${ROLES[2].color}"><div class="role-number">第三组 · 出工与备用</div><h3>${ROLES[2].name}</h3>${selectField('maleAction', '今天接受什么安排')}${selectField('maleFallback', '家庭分担未执行时的备用')}<p class="field-note">正式轮岗后，只接重活会只出工半天。家庭照料、费用与指导均须单独确认。</p></section>
+    <section class="action-card" style="--role-color:${ROLES[3].color}"><div class="role-number">第四组 · 共同制度</div><h3>${ROLES[3].name}</h3>${selectField('evaluation', '评工覆盖')}${selectField('job', '岗位支持')}${selectField('publicCare', '集体托儿')}<p class="field-note">已组织的支持即计成本。只有实际执行带工协议，试工才减1点。</p></section>
+  </div>`;
+}
+
+function agreementPanels(readonly = false) {
+  return `<div class="agreement-grid">${Object.entries(AGREEMENTS).map(([key, agreement]) => {
+    const result = currentResult();
+    const executed = { family: result.family, fee: result.feeAgreement, mentor: result.mentor }[key];
+    const status = executed ? '本日实际执行' : bothApproved(state.agreements[key]) ? '双方已签，当前行动未执行此协议' : key === 'fee' && result.motherCareMode === 'private' && state.plan.maleFee === 0 ? '女方自付4分，无需男方承担费用' : '尚未获得双方同意';
+    const offer = key === 'fee' ? `<div class="fee-proposal">${readonly ? `<b>${choiceTitle('maleFee', state.plan.maleFee)}</b>` : selectField('maleFee', '本次提议的4分托儿费用分担')}</div>` : '';
+    const buttons = agreement.signers.map((group, signer) => readonly ? `<span class="pill ${state.agreements[key][signer] ? '' : 'pending'}">第${group + 1}组${state.agreements[key][signer] ? '已同意' : '未同意'}</span>` : `<button class="small" data-action="agreement" data-kind="${key}" data-signer="${signer}" aria-pressed="${state.agreements[key][signer]}">第${group + 1}组${state.agreements[key][signer] ? '已同意 ✓' : '尚未同意'}</button>`).join('');
+    return `<section class="agreement"><h3>${agreement.name}</h3><p>${agreement.description}</p>${offer}<div class="agreement-buttons">${buttons}</div><p class="agreement-status" style="margin-top:10px">${status}</p></section>`;
+  }).join('')}</div>`;
+}
+
+function executionSummary(result, showConfirmation = false) {
+  const requested = [choiceTitle('youthAction', state.plan.youthAction), choiceTitle('motherAction', state.plan.motherAction), choiceTitle('maleAction', state.plan.maleAction), `${choiceTitle('evaluation', state.plan.evaluation)}；${choiceTitle('job', state.plan.job)}；${choiceTitle('publicCare', state.plan.publicCare)}`];
+  return `<div class="section-label"><h3>原计划与实际行动</h3><span>照料 → 岗位 → 记工与预算</span></div><div class="execution-grid">${ROLES.map((role, index) => `<article class="execution-card ${state.confirmed[index] && showConfirmation ? 'confirmed-card' : ''}" style="--role-color:${role.color}"><div class="role-number">第${index + 1}组 · ${role.name}</div><p class="requested"><b>原计划　</b>${requested[index]}</p><h3>${result.actual[index].title}</h3><p>${result.actual[index].details}</p><div class="adjustments">${result.adjustments[index].length ? result.adjustments[index].map(text => `<p>${text}</p>`).join('') : '<p>当前条件匹配，按本组选择执行。</p>'}</div>${showConfirmation ? `<button data-action="confirm-group" data-group="${index}" class="${state.confirmed[index] ? '' : 'primary'}" ${!result.valid ? 'disabled' : ''}>${state.confirmed[index] ? '已确认本组安排 ✓ · 点击撤回' : '确认本组实际行动'}</button>` : ''}</article>`).join('')}</div>`;
+}
+
+function budgetNotice(result) {
+  if (!result.valid) return `<div class="notice budget-error" role="alert"><b>预算尚未平衡</b><p>${result.budgetError}</p><p>意向可以继续协商，正式执行前须调整主任安排，或让符合条件的带工协议实际生效。</p></div>`;
+  return `<div class="budget-strip"><span>评工 ${result.evaluationCost}点</span><span>岗位 ${result.jobCost}点${result.mentor ? '（带工减1点）' : ''}</span><span>托儿组织 ${result.publicCareCost}点</span><b>预计共花${result.spent}点 · 余${result.remaining}点</b></div>`;
+}
+
+function change(before, after, unit = '') {
+  const delta = after - before;
+  return `<span>${before} → ${after}${unit}</span><span class="delta">${delta === 0 ? '不变' : delta > 0 ? `＋${delta}` : `−${Math.abs(delta)}`}</span>`;
+}
+
+function ledgerTable(before, after, title = '四组账目变化') {
+  const rows = [
+    { name: ROLES[0].name, label: '个人记工', before: before.youthPoints, after: after.youthPoints,
+      labor: `<p>田间 ${change(2, 2, '个半日')}</p><p>重活 ${change(before.youthHeavy, after.youthHeavy, '个半日')}</p>`,
+      unpaid: `<p>家务 ${change(2, 2, '项')}</p>`, context: `${after.actual[0].title}<br>${['原评工', '本组试行统一标准', '全社统一标准'][after.plan.evaluation]}` },
+    { name: ROLES[1].name, label: '个人净得', before: before.motherNet, after: after.motherNet,
+      labor: `<p>田间 ${change(before.motherField, after.motherField, '个半日')}</p><p>毛工分 ${change(before.motherGross, after.motherGross, '分')}</p>`,
+      unpaid: `<p>自己照料 ${change(before.motherCare, after.motherCare, '个半日')}</p><p>家务 ${change(2, 2, '项')}</p>`,
+      context: `<p>本人托儿支出 ${change(before.motherFee, after.motherFee, '分')}</p><p>夫妻合计 ${change(before.householdPoints, after.householdPoints, '分')}</p>` },
+    { name: ROLES[2].name, label: '个人净得', before: before.maleNet, after: after.maleNet,
+      labor: `<p>田间 ${change(before.maleField, after.maleField, '个半日')}</p><p>毛工分 ${change(before.maleGross, after.maleGross, '分')}</p>`,
+      unpaid: `<p>自己照料 ${change(before.maleCare, after.maleCare, '个半日')}</p><p>无工分指导 ${change(before.guidance, after.guidance, '项')}</p>`,
+      context: `<p>本人托儿支出 ${change(before.maleFee, after.maleFee, '分')}</p><p>夫妻合计 ${change(before.householdPoints, after.householdPoints, '分')}</p>` },
+    { name: ROLES[3].name, label: '集体示范记工', before: before.collectivePoints, after: after.collectivePoints,
+      labor: `<p>三人合计 ${change(before.fieldTotal, after.fieldTotal, '个半日')}</p>`,
+      unpaid: `<p>集体托儿新增记工 ${change(before.careCredit, after.careCredit, '分')}</p>`,
+      context: `<p>组织资源余量 ${change(before.remaining, after.remaining, '点')}</p><span class="row-caption">支持闲置仍按确认的组织成本核算</span>` }
+  ];
+  const careText = after.motherCareMode === 'private' ? `邻里照料者接手全天照料，收到家庭转付4分，女方出${after.motherFee}分、男方出${after.maleFee}分。` : after.motherCareMode === 'public' ? '保娃组接手全天照料，集体新增给照料者记4分。' : after.family ? '男社员与既有家庭互助各照料半天。' : '女社员自己照料半天，既有家庭互助代看另半天。';
+  return `<section><div class="section-label"><h3>${title}</h3><span>同一个示范日 · 前一安排 → 当前安排</span></div><div class="table-wrap"><table class="ledger-table"><thead><tr><th>小组</th><th>工分</th><th>田间劳动</th><th>照料、家务与指导</th><th>家庭与集体资源</th></tr></thead><tbody>${rows.map(row => `<tr><td><b>${row.name}</b></td><td><div class="number-change">${row.before} → ${row.after}</div><span class="row-caption">${row.label}，${row.after === row.before ? '不变' : row.after > row.before ? `增加${row.after - row.before}分` : `减少${row.before - row.after}分`}</span></td><td>${row.labor}</td><td>${row.unpaid}</td><td>${row.context}</td></tr>`).join('')}</tbody></table></div><p class="after-note">${careText} 资源与工分分别记账，家务项数与半日班次分别展示。</p></section>`;
+}
+
+function lobby() {
+  return `<section class="hero"><div class="hero-copy"><div class="eyebrow">四组自主行动 · 同一个农忙日</div><h1>合作社的<br>三场商议</h1><p>你想做什么劳动，谁来照料，托儿费由谁出？分别作选择，再看四组的行动怎样彼此影响。</p><div class="hero-buttons"><button class="primary" data-action="start">开始独立行动游戏</button><button data-action="rules">先看完整规则</button></div></div><aside class="hero-side"><h2>各自选择，联动结算</h2><p>第一场　公布制度与意向<br>第二场　协商、签约与调整<br>第三场　分别确认、统一执行</p><p>共用6点组织资源。夫妻可以协商照料与4工分费用分担；条件未满足时，执行各自登记的备用行动。</p></aside></section>${roleCards()}`;
+}
+
+function preparation() {
+  const baseline = baselineResult();
+  return `${heading('角色准备', '先认清彼此的权限与利益', '第二、三组属于同一家庭，分别显示个人所得与家庭合计。主任提供共同制度，各社员自主选择行动。')}${roleCards()}<div class="notice">本局只有一个示范农忙日。三场商议修改同一天的安排，只有最终执行时正式记账一次。</div>${ledgerTable(baseline, baseline, '开局四组账目')}<div class="round-actions"><button data-action="rules">查看规则</button><button class="primary" data-action="advance">进入第一场 · 公布意向 →</button></div>`;
+}
+
+function sceneScreen() {
+  const result = currentResult();
+  if (state.review) return sceneReceipt();
+  if (state.phase === 3) {
+    const confirmed = state.confirmed.filter(Boolean).length;
+    return `${heading('第三场 · 分别确认', '确认本组实际会做什么', '各组确认的是自己的行动和责任。四组可以执行不同的选择，全部确认后统一结算。')}${budgetNotice(result)}${executionSummary(result, true)}${agreementPanels(true)}<div class="round-actions"><button data-action="back-negotiate">返回第二场修改</button><span class="muted">已确认 ${confirmed} / 4</span><button class="primary" data-action="record-scene" ${confirmed < 4 || !result.valid ? 'disabled' : ''}>正式执行并展示四组变化 →</button></div>`;
+  }
+  const first = state.phase === 1;
+  return `${heading(first ? '第一场 · 公布意向' : '第二场 · 协商调整', first ? '同一天，四组各自怎么选？' : '把条件、费用和备用安排谈清楚', first ? '各组提出自己的意向。选择不同、条件未匹配时，下面的行动预览会解释结果。' : '可修改各组行动，再由相关组分别确认协议。改动会清除最终确认，改变费用数额还会清除费用协议签名。')}${actionForms()}${first ? '<div class="notice">协议在第二场确认。第一场展示尚未取得配合时，各组会执行怎样的备用行动。</div>' : agreementPanels()}${budgetNotice(result)}${executionSummary(result)}<div class="round-actions"><button data-action="ledger">查看当日试算账</button><button class="primary" data-action="record-scene">记录本场安排并展示变化 →</button></div>`;
+}
+
+function sceneReceipt() {
+  const index = state.phase - 1;
+  const before = index === 0 ? baselineResult() : resolveDay(state.checkpoints[index - 1].plan, state.checkpoints[index - 1].agreements);
+  const after = resolveDay(state.checkpoints[index].plan, state.checkpoints[index].agreements);
+  const formal = state.phase === 3;
+  return `${heading(`${PHASE_NAMES[state.phase]} · 已记录`, formal ? '各组行动已正式执行' : '本场协商改变了什么？', formal ? '下面展示最终确认与前一场安排的差别。' : '本页是同一天的意向试算。资源尚未正式支出，收入也未重复累加。')}${budgetNotice(after)}${ledgerTable(before, after)}<div class="notice">${formal ? '第三场主要确认第二场安排，数据可以保持不变。' : '各组可返回本场修改，也可带着当前安排继续协商。'}</div><div class="round-actions"><button data-action="edit-scene">返回本场修改</button><button data-action="execution">查看原计划与实际行动</button><button class="primary" data-action="advance">${state.phase === 1 ? '进入第二场 · 协商调整' : state.phase === 2 ? '进入第三场 · 分别确认' : '揭晓合作社与四组结局'} →</button></div>`;
+}
+
+function roleOutcomeCards(result) {
+  return `<div class="outcome-grid">${roleEndings(result).map((outcome, index) => `<article class="outcome" style="--role-color:${ROLES[index].color}"><div class="role-name">第${index + 1}组 · ${ROLES[index].name}</div><h3>${outcome.title}</h3><p><b>获得与改变　</b>${outcome.gain}</p><p><b>承担与代价　</b>${outcome.cost}</p><p class="muted"><b>后续问题　</b>${outcome.future}</p></article>`).join('')}</div>`;
+}
+
+function resultCard(result) {
+  return `<article><div class="result-hero"><div class="eyebrow">合作社主结局 · ${result.ending + 1} / 7</div><h2 class="ending-title">${result.title}</h2><p>${result.narrative}</p><div class="tags">${resultTags(result).map(tag => `<span class="pill pending">${tag}</span>`).join('')}</div></div><div class="metrics"><div class="metric"><span>女社员净得</span><b>${result.motherNet}分</b></div><div class="metric"><span>男社员净得</span><b>${result.maleNet}分</b></div><div class="metric"><span>夫妻家庭合计</span><b>${result.householdPoints}分</b></div><div class="metric"><span>三人出工 / 资源余额</span><b>${result.fieldTotal}半日 / ${result.remaining}点</b></div></div>${roleOutcomeCards(result)}</article>`;
+}
+
+function resultScreen() {
+  return `${heading('结局揭晓', '同一天，四组走到了不同处境', '看看谁获得支持、谁执行备用安排、谁承担费用与额外劳动。')}${resultCard(currentResult())}<div class="round-actions"><button data-action="history">查看三场记录与账目</button><button data-action="undo-final">纠正本场执行</button><button class="primary" data-action="advance">试改一个行动或协议 →</button></div>`;
+}
+
+function comparisonData() {
+  const plan = structuredClone(state.plan);
+  const agreements = structuredClone(state.agreements);
+  const { field, value } = state.compare;
+  if (field in AGREEMENTS) agreements[field] = [value, value];
+  else {
+    plan[field] = value;
+    if (field === 'maleFee') agreements.fee = [true, true];
+  }
+  return resolveDay(plan, agreements);
+}
+
+function compareScreen() {
+  const field = state.compare.field;
+  const options = field in CHOICES ? CHOICES[field] : [{ value: false, title: '假定双方不接受协议' }, { value: true, title: '假定双方接受协议' }];
+  const alternative = comparisonData();
+  return `${heading('重选比较', '试改一个角色的行动或一项协议', '其他条件保留。协议试算假定双方接受；费用改动假定双方确认新数额。涉及的行动条件仍需匹配。')}<div class="compare-controls"><label>更改什么<select aria-label="更改什么" data-compare="field">${Object.entries(FIELD_LABELS).map(([key, label]) => `<option value="${key}" ${field === key ? 'selected' : ''}>${label}</option>`).join('')}${Object.entries(AGREEMENTS).map(([key, agreement]) => `<option value="${key}" ${field === key ? 'selected' : ''}>${agreement.name}</option>`).join('')}</select></label><label>改成什么<select aria-label="改成什么" data-compare="value">${options.map((option, index) => `<option value="${index}" ${option.value === state.compare.value ? 'selected' : ''}>${option.title}</option>`).join('')}</select></label></div><div class="comparison"><section><div class="compare-label">正式结果</div>${resultCard(currentResult())}</section><section><div class="compare-label">重选试算</div>${alternative.valid ? `${resultCard(alternative)}<div class="notice">${alternative.notices.length ? alternative.notices.map(notice => `<p>第${notice.group + 1}组：${notice.text}</p>`).join('') : '当前改动的执行条件均匹配。'}</div>` : budgetNotice(alternative)}</section></div><div class="round-actions"><button data-action="history">查看正式记录</button><button class="primary" data-action="advance">回到主题 →</button></div>`;
+}
+
+function summaryScreen() {
+  const result = currentResult();
+  return `${heading('回到主题', '制度怎样进入村庄与家庭？', '把个人工分、家庭合计、集体出勤和无报酬劳动放在一起看。')}<p class="question">同样是“更多妇女参加了集体劳动”，谁的机会、回报和负担发生了什么变化？</p><div class="discussion-grid"><article class="discussion-item"><h3>哪些选择真正得以执行？</h3><p>青年女队员${result.actual[0].title}。女社员${result.actual[1].title}。</p></article><article class="discussion-item"><h3>个人所得和家庭收益一致吗？</h3><p>女社员净得${result.motherNet}分，男社员净得${result.maleNet}分；家庭合计${result.householdPoints}分，开局15分。</p></article><article class="discussion-item"><h3>成本由谁承担？</h3><p>托儿女付${result.motherFee}分、男付${result.maleFee}分。男社员照料${result.maleCare}个半日、额外指导${result.guidance}项。两位妇女各有2项家务继续要做。</p></article></div><div class="notice">哪些要求没有取得支持？如果只汇报出工人数、工分或家庭合计，会漏掉谁的实际经历？</div><div class="round-actions"><button data-action="show-ending">再看正式结局</button><button data-action="sources">材料依据</button><button class="primary" data-action="finish">结束本场协商</button></div>${state.finished ? '<p class="after-note">本场已结束，正式结果与协商记录已保存在本机。</p>' : ''}`;
+}
+
+function render() {
+  const result = currentResult();
+  document.getElementById('resources').textContent = result.remaining;
+  document.getElementById('resource-label').textContent = state.settled ? '组织资源余额' : '组织资源预计余量';
+  document.getElementById('resource-dots').innerHTML = Array.from({ length: 6 }, (_, index) => `<span class="dot ${index >= Math.max(0, result.remaining) ? 'spent' : ''}"></span>`).join('');
+  document.getElementById('steps').innerHTML = PHASE_NAMES.map((name, index) => `<span class="step ${state.phase === index ? 'active' : ''} ${state.phase > index ? 'done' : ''}">${name}</span>`).join('');
+  document.getElementById('notes-button').hidden = state.phase < 1 || state.phase > 3;
+  if (state.phase < 0) app.innerHTML = lobby();
+  else if (state.phase === 0) app.innerHTML = preparation();
+  else if (state.phase <= 3) app.innerHTML = sceneScreen();
+  else if (state.phase === 4) app.innerHTML = resultScreen();
+  else if (state.phase === 5) app.innerHTML = compareScreen();
+  else app.innerHTML = summaryScreen();
+  save();
+}
+
+function showDialog(title, html) {
+  document.getElementById('dialog-title').textContent = title;
+  document.getElementById('dialog-body').innerHTML = html;
+  if (!dialog.open) dialog.showModal();
+  dialog.scrollTop = 0;
+}
+
+function sourcesHtml() {
+  return `<h3>导修材料</h3><p><b>贺萧《农民》，书页207—211</b><br>工分差距、任务的性别分配、重活案例和同工同酬的落实。</p><p><b>贺萧《母亲》，书页268、285、287—289</b><br>家庭劳动、个人托儿支出、集体照料记工和组织困难。</p><p><b>杜润生《大集体经济》，书页76—78</b><br>扩大生产与组织农村劳动力的制度背景。</p><h3>模拟设定</h3><p>游戏将不同地点与经历组合到虚构合作社。夫妻关系、角色权限、示范日、记工表、6点资源、协议及备用机制为课堂推演设定。原文案例各有条件，游戏工分不能当作各村通行的固定工资。</p><p>三场修改同一天的安排，只有最终执行时记账一次。组织资源表示本局组织支持的成本。工分实际分配仍取决于收成和总工分，结局只描述本局条件下的处境。</p>`;
+}
+
+function rulesHtml() {
+  return `<h3>一天、三场商议</h3><p>第一场公布制度与各自意向，第二场协商并签协议，第三场四组分别确认自己的实际行动。各组可以执行不同选择。只有最终执行时正式记账一次，各环节由主持人自主推进。</p>${roleCards()}<h3>共同制度</h3><p>主任在6点内选择评工覆盖（原标准0点、小组试行1点、全社统一2点）、岗位支持（原派工0点、正式轮岗1点、试工2点）及集体托儿（不开办0点、开办3点）。最终确认提供的支持即计组织成本，本局无人使用也保留成本。实际带工协议可减试工成本1点。</p><h3>记工与开局</h3><table><thead><tr><th>全天任务</th><th>原评工中的妇女</th><th>统一后／男子</th></tr></thead><tbody><tr><td>普通劳动</td><td>6分</td><td>10分</td></tr><tr><td>重活</td><td>8分</td><td>12分</td></tr></tbody></table><p>半日按相应标准的一半。开局青年女队员普通劳动6分，女社员半天普通劳动3分、自己照料半天，男社员重活12分。三人出工5个半日、记工21分、家庭合计15分。两位妇女各有2项家务。</p><h3>四组独立行动</h3><p>第一组可选普通劳动、申请正式轮岗、申请试工。后两项需要对应岗位支持；不匹配则按备用普通劳动执行。</p><p>第二组可选自己照料、邻里托儿、集体托儿、请丈夫接手。另登记备用：自己照料半天，或自己付全部4分使用邻里托儿。</p><p>第三组可选接受最终派工全天、只接重活、接手半天照料。家庭分担未执行时，使用自己登记的前两种备用之一。正式轮岗后，接受全天派工记11分；只接剩余重活则半天记6分。家庭分担时半天重活记6分。</p><h3>三项协议</h3><p><b>家庭分担</b>须女社员选择家庭分担、男社员选择照料，第二、三组都同意。男社员少出半天工，女社员全天出工，合计出勤仍5个半日。</p><p><b>费用分担</b>邻里托儿合计4分，可协商男方承担0—4分。男方承担任何费用须双方确认数额。若未达成，则执行第二组登记的备用行动。修改数额会清除费用签名。</p><p><b>带工</b>第一组实际参加主任提供的试工，第一、三组都同意，男社员承担1项额外无工分指导，试工成本由2点减为1点。额外指导单列劳动负担。</p><h3>冲突处理</h3><p>先匹配照料与费用，确定出工时间；再分配岗位、指导，最后核算工分与预算。正式轮岗优先给申请成功的青年女队员半天重活；男社员仍可选择是否接受其余普通劳动。未取得他人配合的照料或费用提议，按本人登记的备用行动执行。</p><p>未经双方同意不扣男方托儿费、不强制接手照料。若母亲最终未采用家庭分担，男方执行自己登记的备用出工。未实际执行的带工不减组织成本。预算超支时须调整主任安排，不能正式执行。</p><h3>结算与展示</h3><p>个人净得＝本人毛工分－本人托儿支出；家庭合计＝夫妻净得之和。示范记工＝三人毛工分＋实际集体托儿新增4分。邻里托儿4分为家庭工分转付，照料者所得另列。本局未使用集体托儿时，不在本局照料示范账新增4分。</p><p>每场记录后都展示四组前后变化。前两场是意向试算，第三场才正式执行。原计划、实际行动、调整原因同时保留。</p><h3>七类主结局，依次判定</h3><ol><li>女社员半天出工：照料限制。</li><li>全天出工但净得少于6分：个人回报偏低。</li><li>全天、净得至少6分但评工未全社统一：改善覆盖有限。</li><li>全社统一、全天且净得至少6分，青年女队员仍做普通劳动：岗位分工延续。</li><li>前述条件满足，青年女队员有重活、家庭分担执行：家庭重新分工。</li><li>前述条件满足、采用邻里托儿：家庭承担照料成本。</li><li>前述条件满足、实际使用集体托儿：形成集体配套。</li></ol><p>四组各有详细结局，描述所得、代价与后续问题。另显示支持使用情况、岗位持续性、出工是否达到6个半日、组织资源与家务。</p><h3>确认与修改</h3><p>第三场每组只确认自己的安排。改动方案或协议会清除四组确认；涉及费用数额变化会清除费用签名。正式执行后保留记录，纠错需撤回结算、返回协商并重新确认。重选试算不会改正式结果。</p>${sourcesHtml()}`;
+}
+
+function historyHtml() {
+  if (!state.checkpoints.length) return '<p>本场尚未记录第一场安排。</p>';
+  return state.checkpoints.map((checkpoint, index) => {
+    const before = index === 0 ? baselineResult() : resolveDay(state.checkpoints[index - 1].plan, state.checkpoints[index - 1].agreements);
+    const after = resolveDay(checkpoint.plan, checkpoint.agreements);
+    return `<h3>第${index + 1}场 · ${index < 2 ? '意向试算' : '正式执行'}</h3><p><b>协商记录</b><br>${escapeHtml(state.notes[index] || '本场未记录文字。').replace(/\n/g, '<br>')}</p>${ledgerTable(before, after)}<p class="after-note">${after.notices.map(notice => `第${notice.group + 1}组：${notice.text}`).join('<br>') || '各组选择的执行条件均匹配。'}</p>`;
+  }).join('');
+}
+
+function recordScene() {
+  if (state.phase < 1 || state.phase > 3 || state.review || state.settled) return;
+  if (state.phase === 3 && (!currentResult().valid || !state.confirmed.every(Boolean))) return;
+  state.checkpoints.push(capture(state));
+  state.review = true;
+  state.settled = state.phase === 3;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function advance() {
+  if (state.phase < 0 || state.phase >= 6) return;
+  if (state.phase >= 1 && state.phase <= 3 && !state.review) return;
+  state.phase++;
+  state.review = false;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function clearConfirmations() { state.confirmed = [false, false, false, false]; }
+
+function returnToNegotiation() {
+  state.phase = 2;
+  state.review = false;
+  state.settled = false;
+  state.finished = false;
+  state.checkpoints = state.checkpoints.slice(0, 1);
+  clearConfirmations();
+  render();
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener('click', async event => {
+  const button = event.target.closest('button[data-action]');
+  if (!button || button.disabled) return;
+  showMessage('');
+  const action = button.dataset.action;
+  try {
+    if (action === 'start' && state.phase < 0) { state.phase = 0; render(); window.scrollTo(0, 0); }
+    else if (action === 'advance') advance();
+    else if (action === 'record-scene') recordScene();
+    else if (action === 'rules') showDialog('独立行动版完整规则', rulesHtml());
+    else if (action === 'sources') showDialog('材料依据与模拟设定', sourcesHtml());
+    else if (action === 'ledger') showDialog(state.settled ? '当日正式账目 · 与开局比较' : '当日意向试算 · 与开局比较', ledgerTable(baselineResult(), currentResult()));
+    else if (action === 'execution') showDialog('原计划、实际行动与调整原因', executionSummary(currentResult()));
+    else if (action === 'history') showDialog('三场记录与账目', historyHtml());
+    else if (action === 'close-dialog') dialog.close();
+    else if (action === 'notes') {
+      const index = state.phase - 1;
+      showDialog('本场协商记录', `<label class="note-label" for="negotiation-note">${PHASE_NAMES[state.phase]}</label><textarea id="negotiation-note" maxlength="1000" data-note="${index}" placeholder="记录岗位要求、夫妻协商与接受的条件……">${escapeHtml(state.notes[index])}</textarea><p class="after-note">文字自动保存。行动和协议须在对应控件中登记确认。</p>`);
+    }
+    else if (action === 'agreement') {
+      if (state.phase !== 2 || state.review || state.settled) return;
+      const key = button.dataset.kind;
+      const signer = Number(button.dataset.signer);
+      state.agreements[key][signer] = !state.agreements[key][signer];
+      clearConfirmations();
+      render();
+    }
+    else if (action === 'confirm-group') {
+      if (state.phase !== 3 || state.review || !currentResult().valid) return;
+      const group = Number(button.dataset.group);
+      state.confirmed[group] = !state.confirmed[group];
+      render();
+    }
+    else if (action === 'back-negotiate') returnToNegotiation();
+    else if (action === 'edit-scene') {
+      if (!state.review) return;
+      if (state.settled) showDialog('撤回本次正式执行', '<p>本次执行将撤回，保留方案供修改。返回协商后，四组需重新确认。</p><button class="primary" data-action="confirm-undo">确认撤回并返回协商</button>');
+      else { state.checkpoints.pop(); state.review = false; clearConfirmations(); render(); window.scrollTo(0, 0); }
+    }
+    else if (action === 'undo-final') showDialog('纠正本次执行', '<p>撤回正式执行并返回第二场。保留方案与协议供核对，四组需重新确认。旧结局在重新执行后重算。</p><button class="primary" data-action="confirm-undo">确认撤回并返回协商</button>');
+    else if (action === 'confirm-undo') { dialog.close(); returnToNegotiation(); }
+    else if (action === 'show-ending') showDialog('正式结局', resultCard(currentResult()));
+    else if (action === 'finish') { state.finished = true; render(); showMessage('本场协商已结束，正式结果和记录已保存。'); }
+    else if (action === 'reset') showDialog('重新开始', '<p>本机本场的行动、协议、协商记录与结局将被清空，恢复开局安排。</p><div class="hero-buttons"><button data-action="close-dialog">保留当前进度</button><button class="primary" data-action="confirm-reset">确认重新开始</button></div>');
+    else if (action === 'confirm-reset') { state = freshState(); dialog.close(); render(); window.scrollTo(0, 0); }
+    else if (action === 'fullscreen') {
+      try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); }
+      catch (error) { showMessage('请使用浏览器全屏按钮，或按F11。'); }
+    }
+  } catch (error) { showMessage(error.message); }
+});
+
+document.addEventListener('change', event => {
+  const planField = event.target.dataset.plan;
+  if (planField && (state.phase === 1 || state.phase === 2) && !state.review && !state.settled) {
+    const option = CHOICES[planField][Number(event.target.value)];
+    if (!option) return;
+    state.plan[planField] = option.value;
+    if (planField === 'maleFee') state.agreements.fee = [false, false];
+    clearConfirmations();
+    render();
+    if (planField === 'maleFee') showMessage('费用数额已更新，请第二、三组重新确认当前费用协议。');
+    return;
+  }
+  const compareKey = event.target.dataset.compare;
+  if (!compareKey || state.phase !== 5) return;
+  if (compareKey === 'field') {
+    state.compare.field = event.target.value;
+    state.compare.value = state.compare.field in CHOICES ? CHOICES[state.compare.field][0].value : true;
+  } else {
+    const field = state.compare.field;
+    state.compare.value = field in CHOICES ? CHOICES[field][Number(event.target.value)].value : Number(event.target.value) === 1;
+  }
+  render();
+});
+
+document.addEventListener('input', event => {
+  if (event.target.matches('[data-note]')) { state.notes[Number(event.target.dataset.note)] = event.target.value; save(); }
+});
+document.addEventListener('fullscreenchange', () => { document.querySelector('[data-action="fullscreen"]').textContent = document.fullscreenElement ? '退出全屏' : '全屏投影'; });
+window.addEventListener('pagehide', save);
+render();
+
+</script>
+</body>
+</html>
