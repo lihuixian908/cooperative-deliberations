@@ -34,7 +34,7 @@ const GRANTS = [6, 4, 3];
 const ERAS = [
   {years:'1953—1955', title:'初级社试工', theme:'谁愿意带工，谁能腾出时间出工？', context:'本村还没有合作社托儿点。第一次试做重活，需要合作社留出岗位，并由第一、三组谈成带工。'},
   {years:'1956—1957', title:'高级社派工与托儿', theme:'经验能换来派工机会吗？照料能交给合作社吗？', context:'本村转为高级社，家庭收入更依赖集体劳动报酬。有试工经验的女社员可以独立申请派工，合作社可以开办农忙托儿点。'},
-  {years:'1958—1962', title:'公社化及调整', theme:'资源承压，哪些安排能够维持', context:'基层组织经历变化与调整。本轮新增组织资源减少，已有安排需要重新确认与投入。'}
+  {years:'1961—1962', title:'公社调整期', theme:'谁去外派，谁补农活，谁接手照料？', context:'1958年公社化后，本村一度集中派工、组织托儿。调整期生产队重新安排农忙劳动，村外工程还有一个名额，原有集中托儿难以维持。'}
 ];
 const ROLES = [
   {name:'争取岗位的女社员',color:'#873d3d',interest:'选择劳动与岗位，积累经验，也考虑家务和学习负担。'},
@@ -46,7 +46,7 @@ const CHOICES = {
   youthAction:[['ordinary','A · 全天普通劳动'],['practice','B · 申请重活实践／继续岗位'],['rest','C · 半天普通劳动，半天家务与休整']],
   motherAction:[['home','A · 自己处理家庭事务，出工半天'],['private','B · 邻里付酬照料，出工全天'],['public','C · 使用集体照料，出工全天'],['family','D · 请男社员分担，出工全天']],
   motherFallback:[['home','备用 · 自己处理家庭事务，出工半天'],['privateSelf','备用 · 邻里照料，自己付全部4分']],
-  maleAction:[['assigned','A · 接受最终派工，出工全天'],['heavyOnly','B · 只接受分到的重活'],['care','C · 半天重活，分担家庭事务与一项晚间家务']],
+  maleAction:[['assigned','A · 接受最终派工，出工全天'],['heavyOnly','B · 只接受分到的重活'],['care','C · 半天重活，分担家庭事务与一项晚间家务'],['dispatch','D · 接受村外工程派工，全天在外']],
   maleFallback:[['assigned','备用 · 接受最终派工'],['heavyOnly','备用 · 只接受分到的重活']],
   evaluation:[[0,'沿用原差别计价 · 0点'],[1,'仅第一组落实统一标准 · 1点'],[2,'两组女社员均落实统一标准']],
   job:[[false,'不提供岗位支持 · 0点'],[true,'提供岗位支持 · 按经验与带工核算']],
@@ -76,16 +76,21 @@ function validPlan(p){return p&&Object.keys(CHOICES).every(k=>CHOICES[k].some(([
 function validAgreements(a){return a&&Object.keys(AGREEMENTS).every(k=>Array.isArray(a[k])&&a[k].length===2&&a[k].every(v=>typeof v==='boolean'));}
 function choiceTitle(k,v){return CHOICES[k].find(o=>o[0]===v)?.[1]??'未选择';}
 function freshCareer(){return {rounds:0,reserve:0,skill:0,points:[0,0,0],burdens:[0,0,0],field:0,collective:0,neighbor:0,careCredit:0,evaluations:[],publicOpened:[],modes:[],motherFull:0,familyCount:0,feeCount:0,feeTotal:0,mentorCount:0,restCount:0,unusedCount:0,youthEqualCount:0,formalLast:false};}
-function resolveRound(before,plan,agreements,stageRules=true){
+function resolveRound(before,plan,agreements,stageRules=true,adjustmentRules=true){
   if(!validPlan(plan)||!validAgreements(agreements)||before.rounds>2)throw Error('本轮安排无效');
   const round=before.rounds,available=before.reserve+GRANTS[round];
+  const adjusted=adjustmentRules&&round===2;
+  const dispatched=plan.maleAction==='dispatch';
+  if(dispatched&&!adjusted)throw Error('本轮没有村外工程派工');
   const publicOpened=plan.publicCare&&(!stageRules||round>0);
+  const nurseryStaff=adjusted&&publicOpened;
+  const localStaffField=adjusted&&!nurseryStaff?1:0;
   const needsMentor=stageRules&&round<2&&before.skill===0;
   const reasons=[[],[],[],[]];
   let mode=plan.motherAction, family=mode==='family'&&plan.maleAction==='care'&&approved(agreements.family);
   let failure='';
   if(mode==='public'&&!publicOpened)failure=stageRules&&round===0?'本村这一轮还没有合作社托儿点':'第四组未开办集体照料';
-  if(mode==='family'&&!family)failure=plan.maleAction!=='care'?'第三组未选择家庭分担':'家庭分担尚未获得双方同意';
+  if(mode==='family'&&!family)failure=dispatched?'第三组外派，当轮无法接手家庭事务':plan.maleAction!=='care'?'第三组未选择家庭分担':'家庭分担尚未获得双方同意';
   if(mode==='private'&&plan.maleFee>0&&!approved(agreements.fee))failure='当前费用分担尚未获得双方同意';
   let motherFee=0,maleFee=0;
   if(failure){mode=plan.motherFallback==='home'?'home':'private';motherFee=mode==='private'?4:0;family=false;reasons[1].push(`${failure}；执行${choiceTitle('motherFallback',plan.motherFallback)}。`);}
@@ -99,13 +104,19 @@ function resolveRound(before,plan,agreements,stageRules=true){
     youthAction='ordinary';
     reasons[0].push('首次试做重活需要带工，第一、三组尚未达成协议。改为全天普通劳动。');
   }
-  const practice=youthAction==='practice',formal=practice&&before.skill>=2,mentor=practice&&!formal&&approved(agreements.mentor);
+  if(youthAction==='practice'&&dispatched&&before.skill<2){
+    youthAction='ordinary';
+    reasons[0].push('第三组外派，独立补上重活岗位需要2点经验。改为本队全天普通派工。');
+  }
+  const practice=youthAction==='practice',formal=practice&&before.skill>=2,mentor=practice&&!formal&&!dispatched&&approved(agreements.mentor);
+  const filledVacancy=dispatched&&formal;
   const youthField=youthAction==='rest'?1:2,youthHeavy=practice?1:0;
   const youthDaily=plan.evaluation>0?10:6;
   const youthPoints=youthAction==='rest'?youthDaily/2:practice?youthDaily+1:youthDaily;
   let maleField=2,maleHeavy=practice?1:2,maleGross=practice?11:12;
   if(maleAction==='heavyOnly'){maleField=maleHeavy;maleGross=maleHeavy*6;}
   if(maleAction==='care'){maleField=1;maleHeavy=1;maleGross=6;}
+  if(dispatched){maleField=0;maleHeavy=0;maleGross=12;}
   if(practice&&maleAction==='assigned')reasons[2].push('一个半日重活已安排给第一组；接受半天重活、半天普通劳动，记11分。');
   if(practice&&maleAction==='heavyOnly')reasons[2].push('只接剩余半日重活；不补普通劳动，实际出工半天、记6分。');
   const motherField=mode==='home'?1:2,motherGross=(plan.evaluation===2?10:6)*motherField/2;
@@ -119,6 +130,7 @@ function resolveRound(before,plan,agreements,stageRules=true){
   if(plan.job&&!practice)unused.push('岗位支持已组织却未使用，仍扣岗位成本。');
   if(publicOpened&&mode!=='public')unused.push('集体照料已组织却未使用，仍扣组织成本；示范账不新增照料记工。');
   reasons[3].push(...unused);
+  if(nurseryStaff)reasons[3].push('一名本队社员改做半天托儿，田间少一人出工半天。');
   if(plan.job&&before.skill<2&&!mentor)reasons[3].push('未实际执行带工，岗位按2点核算。');
   const fieldTotal=youthField+motherField+maleField,careCredit=mode==='public'?4:0,neighbor=mode==='private'?4:0;
   const collective=youthPoints+motherGross+maleGross+careCredit;
@@ -131,14 +143,14 @@ function resolveRound(before,plan,agreements,stageRules=true){
   after.motherFull+=motherField===2?1:0;after.familyCount+=family?1:0;after.feeCount+=feeAgreement?1:0;after.feeTotal+=maleFee;
   after.mentorCount+=mentor?1:0;after.restCount+=youthAction==='rest'?1:0;after.unusedCount+=unused.length;after.youthEqualCount+=plan.evaluation>0?1:0;after.formalLast=formal;
   const actual=[
-    {title:youthAction==='rest'?'半天普通劳动、半天家务与休整':practice?(formal?'继续正式岗位':'参加重活学习实践'):'全天普通劳动',text:`本轮${youthPoints}分，出工${youthField}个半日；经验${before.skill}→${after.skill}，负担＋${burdenDelta[0]}。`},
+    {title:filledVacancy?'接下外派后空出的半日重活岗位':youthAction==='rest'?'半天普通劳动、半天家务与休整':practice?(formal?'继续正式岗位':'参加重活学习实践'):'全天普通劳动',text:`本轮${youthPoints}分，出工${youthField}个半日；经验${before.skill}→${after.skill}，负担＋${burdenDelta[0]}。`},
     {title:{home:'自己处理家庭事务，出工半天',private:'邻里付酬照料，出工全天',public:'使用集体照料，出工全天',family:'家庭重新分担，出工全天'}[mode],text:`毛工分${motherGross}，照料支出${motherFee}，净得${motherNet}；负担＋${burdenDelta[1]}。`},
-    {title:family?'半天重活、半天家庭事务及一项晚间家务':maleAction==='heavyOnly'?'只接受分到的重活':'接受最终派工',text:`出工${maleField}个半日，毛工分${maleGross}，照料支出${maleFee}，净得${maleNet}；负担＋${burdenDelta[2]}${mentor?'（含额外带工1点）':''}。`},
-    {title:`本轮投入${spent}点，余额${remaining}点`,text:`合计出工${fieldTotal}个半日，集体示范记工${collective}分${careCredit?'（含照料人员4分）':''}。`}
+    {title:dispatched?'全天参加村外工程':family?'半天重活、半天家庭事务及一项晚间家务':maleAction==='heavyOnly'?'只接受分到的重活':'接受最终派工',text:`${dispatched?'村外出工2个半日，本队出工0个半日':`出工${maleField}个半日`}，毛工分${maleGross}，照料支出${maleFee}，净得${maleNet}；负担＋${burdenDelta[2]}${mentor?'（含额外带工1点）':''}。`},
+    {title:`本轮投入${spent}点，余额${remaining}点`,text:`${adjusted?'本队田间出工':'合计出工'}${fieldTotal+localStaffField}个半日，示范记工${collective}分${dispatched?'（含外派12分）':''}${careCredit?'（含照料人员4分）':''}。`}
   ];
-  return {round,plan:structuredClone(plan),agreements:structuredClone(agreements),before:structuredClone(before),after,available,spent,remaining,valid:remaining>=0,evaluationCost,jobCost,publicCareCost,youthAction,practice,formal,mentor,family,feeAgreement,mode,youthField,youthHeavy,motherField,maleField,maleHeavy,youthPoints,motherGross,motherNet,maleGross,maleNet,motherFee,maleFee,burdenDelta,fieldTotal,careCredit,neighbor,collective,unused,reasons,actual};
+  return {round,adjusted,dispatched,filledVacancy,nurseryStaff,localStaffField,plan:structuredClone(plan),agreements:structuredClone(agreements),before:structuredClone(before),after,available,spent,remaining,valid:remaining>=0,evaluationCost,jobCost,publicCareCost,youthAction,practice,formal,mentor,family,feeAgreement,mode,youthField,youthHeavy,motherField,maleField,maleHeavy,youthPoints,motherGross,motherNet,maleGross,maleNet,motherFee,maleFee,burdenDelta,fieldTotal,careCredit,neighbor,collective,unused,reasons,actual};
 }
-function replay(records){let career=freshCareer();const results=[];for(const record of records){const result=resolveRound(career,record.plan,record.agreements,record.stageRules===true);if(!result.valid)throw Error('历史预算无效');career=result.after;results.push(result);}return {career,results};}
+function replay(records){let career=freshCareer();const results=[];for(const record of records){const result=resolveRound(career,record.plan,record.agreements,record.stageRules===true,record.adjustmentRules===true);if(!result.valid)throw Error('历史预算无效');career=result.after;results.push(result);}return {career,results};}
 function careerFacts(c){return {evaluationCount:c.evaluations.filter(v=>v===2).length,finalCovered:c.evaluations.at(-1)===2,fullEnough:c.motherFull>=2,returnEnough:c.points[1]>=18,formal:c.formalLast,continuous:c.modes.length===3&&c.modes.slice(1).every(v=>v==='family'||v==='public'),finalMode:c.modes.at(-1)};}
 function endingCatalog(c){
   const f=careerFacts(c),req=(text,met)=>({text,met});
@@ -202,12 +214,13 @@ function validateState(s){try{
   const {results}=replay(s.history);
   if(s.originalThirdRound!=null){
     if(results.length<2)return false;
-    const {plan,agreements}=s.originalThirdRound;
-    if(!resolveRound(results[1].after,plan,agreements).valid)return false;
+    const {plan,agreements,adjustmentRules}=s.originalThirdRound;
+    if(!resolveRound(results[1].after,plan,agreements,true,adjustmentRules===true).valid)return false;
   }
   if(s.screen==='home'&&s.history.length!==0)return false;
   if(['ending','discussion'].includes(s.screen)&&s.history.length!==3)return false;
   if(s.screen==='round'&&s.step!=='receipt'&&s.history.length>=3)return false;
+  if(s.plan.maleAction==='dispatch'&&(s.screen==='home'||s.history.length<2||(s.step==='receipt'&&s.history.length!==3)))return false;
   if(s.screen==='round'&&s.step==='receipt')return results.length>0&&JSON.stringify(s.history.at(-1).plan)===JSON.stringify(s.plan)&&JSON.stringify(s.history.at(-1).agreements)===JSON.stringify(s.agreements);
   return true;
 }catch{return false;}}
@@ -239,15 +252,15 @@ function roleCards(){
 function eraStrip(){const n=roundIndex();return `<nav class="timeline" aria-label="三个历史阶段">${ERAS.map((e,i)=>`<div class="era ${i===n?'active':''} ${state.history.length>i?'completed':''}" ${i===n?'aria-current="step"':''}><span>第${i+1}轮 · ${e.years}</span><b>${e.title}</b><small>${state.history.length>i?'已结算':i===n&&state.screen==='round'?'当前阶段':e.theme}</small></div>`).join('')}</nav>`;}
 function stat(label,value,note=''){return `<div class="metric"><span>${label}</span><strong>${value}</strong>${note?`<small>${note}</small>`:''}</div>`;}
 function careerStats(c){return `<div class="metrics">${stat('累计个人示范工分',c.points.join(' / '),'依次为第1、2、3组')}${stat('岗位经验',`${c.skill} / 3`,'前两轮积累决定第三轮岗位')}${stat('累计负担',c.burdens.join(' / '),'各组分别累积，7点起标记较高')}${stat('夫妻累计合计',c.points[1]+c.points[2],'第二组＋第三组个人净得')}</div>`;}
-function homeScreen(){return `<section class="hero"><div><div class="eyebrow">集体化三阶段模拟</div><h1>合作社的<br>三场商议</h1><p class="hero-lead">想多出半天工，<br>原来的照料由谁承担？</p><p>每轮对应一个历史阶段，四组围绕一次代表性的农忙安排作出选择。前一轮的岗位经验、劳动负担和组织资源会带入下一轮。</p><div class="actions">${button('开始模拟','start','primary')}${button('阅读完整规则','rules')}</div></div><aside class="hero-note"><div class="eyebrow">从承诺到长期处境</div><ol><li><b>1953—1955</b><span>初级社带工试做</span></li><li><b>1956—1957</b><span>高级社派工与托儿</span></li><li><b>1958—1962</b><span>压力与调整</span></li></ol><p>结局回望1970年代<br>主持人自主推进，无倒计时</p></aside></section>${roleCards()}<div class="notice">每轮结算一次。累计示范工分是三次模拟结算的合计，用来比较各组选择的后果。</div>`;}
+function homeScreen(){return `<section class="hero"><div><div class="eyebrow">集体化三阶段模拟</div><h1>合作社的<br>三场商议</h1><p class="hero-lead">想多出半天工，<br>原来的照料由谁承担？</p><p>每轮对应一个历史阶段，四组围绕一次代表性的农忙安排作出选择。前一轮的岗位经验、劳动负担和组织资源会带入下一轮。</p><div class="actions">${button('开始模拟','start','primary')}${button('阅读完整规则','rules')}</div></div><aside class="hero-note"><div class="eyebrow">从承诺到长期处境</div><ol><li><b>1953—1955</b><span>初级社带工试做</span></li><li><b>1956—1957</b><span>高级社派工与托儿</span></li><li><b>1961—1962</b><span>外派、补位与托儿</span></li></ol><p>结局回望1970年代<br>主持人自主推进，无倒计时</p></aside></section>${roleCards()}<div class="notice">每轮结算一次。累计示范工分是三次模拟结算的合计，用来比较各组选择的后果。</div>`;}
 function youthPracticeTitle(c){
   if(c.rounds===0)return 'B · 申请带工试做半天重活';
   if(c.rounds===1)return c.skill>0?'B · 凭试工经验独立申请半日重活派工':'B · 申请带工，补做首次重活实践';
-  return choiceTitle('youthAction','practice');
+  return 'B · 申请接下本队半日重活岗位';
 }
 function optionsFor(field){
   const c=data().career;
-  const choices=c.rounds===0&&field==='motherAction'?CHOICES[field].filter(([value])=>value!=='public'):CHOICES[field];
+  const choices=CHOICES[field].filter(([value])=>!(c.rounds===0&&field==='motherAction'&&value==='public')&&!(c.rounds<2&&field==='maleAction'&&value==='dispatch'));
   return choices.map(([value,title])=>{
     let t=title;
     if(field==='youthAction'&&value==='practice')t=youthPracticeTitle(c);
@@ -259,27 +272,37 @@ function optionsFor(field){
     }
     if(field==='motherAction'&&value==='public'&&c.rounds===1)t='C · 使用合作社农忙托儿点，出工全天';
     if(field==='publicCare'&&value)t=c.rounds===1&&!c.publicOpened.at(-1)?'开办农忙托儿点 · 3点':`${title} · ${c.publicOpened.at(-1)?2:3}点`;
+    if(c.rounds===2){
+      if(field==='motherAction'&&value==='public')t='C · 使用本队小托儿组，出工全天';
+      if(field==='maleAction'){
+        if(value==='assigned')t='A · 留队，接受全天农活派工';
+        if(value==='heavyOnly')t='B · 留队，只接分到的重活';
+        if(value==='care')t='C · 留队，半天重活、半天照料';
+      }
+      if(field==='job'&&value)t=c.skill>=2?'安排第一组接下重活岗位 · 1点':'安排第一组学习重活 · 2点，实际带工减1点';
+      if(field==='publicCare')t=value?(c.publicOpened.at(-1)?'安排一人维持小托儿组 · 2点':'安排一人新办小托儿组 · 3点'):'这轮不安排小托儿组 · 0点';
+    }
     return `<option value="${esc(String(value))}" ${state.plan[field]===value?'selected':''}>${t}</option>`;
   }).join('');
 }
 function select(field,label){return `<label class="choice-label">${label}<select data-plan="${field}" aria-label="${FIELD_LABELS[field]}">${optionsFor(field)}</select></label>`;}
 function actionForms(r){
   const first=r.round===0;
-  const jobHelp=r.round===2?'岗位需第四组支持。实际实践＋1经验；无支持时备用为全天普通劳动。减少半日出工可减轻本轮负担。'
+  const jobHelp=r.round===2?'第三组外派后，已有2点经验且第四组安排岗位，才能独立补上重活。条件不够就接受普通派工。第三组留队时仍可安排学习实践。'
     :r.before.skill===0?'要试做重活，须第四组留出岗位，第一、三组谈成带工。实际试做＋1经验。条件未满足就做全天普通劳动。'
     :'有试工经验，可以直接向第四组申请派工。第三组可以自愿带工。实际参加＋1经验，无岗位支持时做全天普通劳动。';
   return `<div class="action-grid">
 <section class="action-card" style="--role:${ROLES[0].color}">${roleHeader(0,'第一组 · 自主行动',ROLES[0].name)}${select('youthAction','本轮劳动安排')}<p class="help">${jobHelp}</p></section>
-<section class="action-card" style="--role:${ROLES[1].color}">${roleHeader(1,'第二组 · 照料与备用',ROLES[1].name)}${select('motherAction','家庭事务与出工')}${select('motherFallback','条件未满足时执行')}<p class="help">${first?'本村尚无合作社托儿点，可自行照料、请邻里代看或协商家庭分担。':r.round===1?'第四组开办后即可使用农忙托儿点。托儿点没办成时执行备用行动。':'孩子会长大，家庭事务也会变化。本轮仍需安排一格家庭事务。'} 邻里照料合计4分。</p></section>
-<section class="action-card" style="--role:${ROLES[2].color}">${roleHeader(2,'第三组 · 出工与责任',ROLES[2].name)}${select('maleAction','本轮劳动安排')}${select('maleFallback','家庭分担未成立时执行')}<p class="help">岗位开放后，只接重活会减少半日出工。家庭分担包括半日家庭事务及一项晚间家务。</p></section>
-<section class="action-card" style="--role:${ROLES[3].color}">${roleHeader(3,'第四组 · 组织投入',ROLES[3].name)}${select('evaluation','评工落实')}${select('job','岗位支持')}${first?'':select('publicCare',r.round===1?'农忙托儿点':'集体照料')}<p class="help">${first?'第一轮安排评工与带教试工。合作社从第二轮起可以办托儿点。':'连续落实两组统一评工、连续开办照料可降低成本。'}已组织的支持即使闲置也扣资源。</p></section>
+<section class="action-card" style="--role:${ROLES[1].color}">${roleHeader(1,'第二组 · 照料与备用',ROLES[1].name)}${select('motherAction','家庭事务与出工')}${select('motherFallback','条件未满足时执行')}<p class="help">${first?'本村尚无合作社托儿点，可自行照料、请邻里代看或协商家庭分担。':r.round===1?'第四组开办后即可使用农忙托儿点。托儿点没办成时执行备用行动。':'第三组外派时无法接手照料。第四组落实人手才能使用本队小托儿组。'} 邻里照料合计4分。</p></section>
+<section class="action-card" style="--role:${ROLES[2].color}">${roleHeader(2,'第三组 · 出工与责任',ROLES[2].name)}${select('maleAction','本轮劳动安排')}${select('maleFallback','家庭分担未成立时执行')}<p class="help">${r.adjusted?'外派全天记12示范工分，本队出工为0，也无法接手照料或在队里带工。留队后可以和第二组协商照料。':'岗位开放后，只接重活会减少半日出工。家庭分担包括半日家庭事务及一项晚间家务。'}</p></section>
+<section class="action-card" style="--role:${ROLES[3].color}">${roleHeader(3,'第四组 · 组织投入',ROLES[3].name)}${select('evaluation','评工落实')}${select('job','岗位支持')}${first?'':select('publicCare',r.round===1?'农忙托儿点':'小托儿组人手')}<p class="help">${first?'第一轮安排评工与带教试工。合作社从第二轮起可以办托儿点。':r.adjusted?'安排托儿需要从本队抽一名社员照料半天。实际使用时给照料者另记4分。':'连续落实两组统一评工、连续开办照料可降低成本。'}已组织的支持即使闲置也扣资源。</p></section>
 </div>`;}
 function budget(r){return `<div class="budget ${r.valid?'':'error'}" ${r.valid?'':'role="alert"'}><div><span>前轮余额 ${r.before.reserve}</span><span>本轮新增 ${GRANTS[r.round]}</span><b>可用 ${r.available}点</b></div><div><span>评工 ${r.evaluationCost}</span><span>岗位 ${r.jobCost}${r.mentor?'（带工减1）':''}</span><span>照料 ${r.publicCareCost}</span><b>投入 ${r.spent} · ${state.step==='receipt'?'余额':'预计余'} ${r.remaining}</b></div>${r.valid?'':`<p>超出预算${-r.remaining}点。第四组须调整投入，或落实符合条件的带工；预算平衡后才能结算。</p>`}</div>`;}
 function agreements(r){
   const relevant = {
-    family:r.plan.motherAction==='family'||r.plan.maleAction==='care',
+    family:!r.dispatched&&(r.plan.motherAction==='family'||r.plan.maleAction==='care'),
     fee:r.plan.motherAction==='private',
-    mentor:r.plan.youthAction==='practice'&&r.plan.job&&r.before.skill<2
+    mentor:!r.dispatched&&r.plan.youthAction==='practice'&&r.plan.job&&r.before.skill<2
   };
   const active = {family:r.family,fee:r.feeAgreement,mentor:r.mentor};
   const entries = Object.entries(AGREEMENTS).filter(([key])=>relevant[key]);
@@ -295,10 +318,10 @@ function agreements(r){
 function actualCards(r){const proposed=[r.plan.youthAction==='practice'?youthPracticeTitle(r.before):choiceTitle('youthAction',r.plan.youthAction),choiceTitle('motherAction',r.plan.motherAction),choiceTitle('maleAction',r.plan.maleAction),r.round===0?'评工与试工岗位投入':'评工、岗位、照料三项组织投入'];return `<div class="execution-grid">${ROLES.map((role,i)=>`<article class="execution-card" style="--role:${role.color}"><div class="role-caption">${roleIcon(i,'small')}<div class="eyebrow">第${i+1}组 · ${role.name}</div></div><p class="requested">意向：${proposed[i]}</p><h3>${r.actual[i].title}</h3><p>${r.actual[i].text}</p>${r.reasons[i].length?`<div class="adjustment">${r.reasons[i].map(s=>`<p>${s}</p>`).join('')}</div>`:''}</article>`).join('')}</div>`;}
 function delta(a,b,unit=''){const d=b-a;return `<b>${a} → ${b}${unit}</b><small>${d===0?'不变':d>0?`＋${d}`:`−${-d}`}</small>`;}
 function ledger(r,preview=false){const b=r.before,a=r.after;return `<section class="ledger-section"><div class="section-label"><h3>四组账目变化</h3><span>${preview?'本轮试算 · 尚未入账':'本轮已结算 · 累计已更新'}</span></div><div class="table-wrap"><table class="ledger-table"><thead><tr><th>小组</th><th>示范工分累计</th><th>本轮劳动与支出</th><th>负担累计</th><th>跨轮记录</th></tr></thead><tbody>
-<tr><th scope="row"><div class="ledger-role">${roleIcon(0,'tiny')}<span>第1组<br>${ROLES[0].name}</span></div></th><td>${delta(b.points[0],a.points[0],'分')}<p>本轮＋${r.youthPoints}</p></td><td>田间 ${r.youthField}个半日<br>重活 ${r.youthHeavy}个半日</td><td>${delta(b.burdens[0],a.burdens[0],'点')}<p>${burdenLabel(a.burdens[0])}</p></td><td>经验 ${b.skill} → ${a.skill}<br>${r.formal?'本轮形成正式岗位':r.practice?'本轮学习实践':'本轮未新增经验'}</td></tr>
+<tr><th scope="row"><div class="ledger-role">${roleIcon(0,'tiny')}<span>第1组<br>${ROLES[0].name}</span></div></th><td>${delta(b.points[0],a.points[0],'分')}<p>本轮＋${r.youthPoints}</p></td><td>田间 ${r.youthField}个半日<br>重活 ${r.youthHeavy}个半日</td><td>${delta(b.burdens[0],a.burdens[0],'点')}<p>${burdenLabel(a.burdens[0])}</p></td><td>经验 ${b.skill} → ${a.skill}<br>${r.filledVacancy?'补上外派后的重活岗位':r.formal?'本轮形成正式岗位':r.practice?'本轮学习实践':'本轮未新增经验'}</td></tr>
 <tr><th scope="row"><div class="ledger-role">${roleIcon(1,'tiny')}<span>第2组<br>${ROLES[1].name}</span></div></th><td>${delta(b.points[1],a.points[1],'分')}<p>本轮净得 ${r.motherNet}</p></td><td>田间 ${r.motherField}个半日<br>本人家庭事务 ${r.mode==='home'?1:0}个半日<br>毛工分 ${r.motherGross} / 支出 ${r.motherFee}</td><td>${delta(b.burdens[1],a.burdens[1],'点')}<p>${r.family?'家庭分担＋1':r.mode==='home'?'自己承担＋3':'照料外移，家务仍在＋2'}</p></td><td>全天出工 ${b.motherFull} → ${a.motherFull}轮<br>夫妻累计 ${b.points[1]+b.points[2]} → ${a.points[1]+a.points[2]}分</td></tr>
-<tr><th scope="row"><div class="ledger-role">${roleIcon(2,'tiny')}<span>第3组<br>${ROLES[2].name}</span></div></th><td>${delta(b.points[2],a.points[2],'分')}<p>本轮净得 ${r.maleNet}</p></td><td>田间 ${r.maleField}个半日<br>家庭事务 ${r.family?1:0}个半日 / 晚间家务 ${r.family?1:0}项<br>费用 ${r.maleFee} / 带工 ${r.mentor?1:0}项</td><td>${delta(b.burdens[2],a.burdens[2],'点')}<p>${r.mentor?'含额外指导＋1':'按本轮实际责任记录'}</p></td><td>家庭分担累计 ${a.familyCount}轮<br>付费 ${a.feeCount}轮 / 带工 ${a.mentorCount}轮</td></tr>
-<tr><th scope="row"><div class="ledger-role">${roleIcon(3,'tiny')}<span>第4组<br>基层生产组织负责人</span></div></th><td>${delta(b.collective,a.collective,'分')}<p>集体示范记工，本轮＋${r.collective}<br>含集体照料记工 ${r.careCredit}</p></td><td>三人合计 ${r.fieldTotal}个半日<br>累计 ${b.field} → ${a.field}个半日</td><td>支持闲置 ${r.unused.length}项<br>照料人员劳动另行记工</td><td>前轮余 ${b.reserve}＋新增 ${GRANTS[r.round]}<br>可用 ${r.available} → 余 ${a.reserve}点<br>两组统一评工累计 ${a.evaluations.filter(v=>v===2).length}轮</td></tr>
+<tr><th scope="row"><div class="ledger-role">${roleIcon(2,'tiny')}<span>第3组<br>${ROLES[2].name}</span></div></th><td>${delta(b.points[2],a.points[2],'分')}<p>本轮净得 ${r.maleNet}</p></td><td>本队田间 ${r.maleField}个半日${r.dispatched?'<br>村外工程 2个半日 · 毛工分12':''}<br>家庭事务 ${r.family?1:0}个半日 / 晚间家务 ${r.family?1:0}项<br>费用 ${r.maleFee} / 带工 ${r.mentor?1:0}项</td><td>${delta(b.burdens[2],a.burdens[2],'点')}<p>${r.mentor?'含额外指导＋1':'按本轮实际责任记录'}</p></td><td>家庭分担累计 ${a.familyCount}轮<br>付费 ${a.feeCount}轮 / 带工 ${a.mentorCount}轮</td></tr>
+<tr><th scope="row"><div class="ledger-role">${roleIcon(3,'tiny')}<span>第4组<br>基层生产组织负责人</span></div></th><td>${delta(b.collective,a.collective,'分')}<p>集体示范记工，本轮＋${r.collective}<br>含集体照料记工 ${r.careCredit}${r.dispatched?'<br>含外派记工 12':''}</p></td><td>三组本队田间合计 ${r.fieldTotal}个半日<br>累计 ${b.field} → ${a.field}个半日${r.adjusted?`<br>加上另排社员，本队田间共${r.fieldTotal+r.localStaffField}个半日`:''}</td><td>支持闲置 ${r.unused.length}项<br>${r.nurseryStaff?'一名本队社员转做半天照料':'照料人员劳动另行记工'}</td><td>前轮余 ${b.reserve}＋新增 ${GRANTS[r.round]}<br>可用 ${r.available} → 余 ${a.reserve}点<br>两组统一评工累计 ${a.evaluations.filter(v=>v===2).length}轮</td></tr>
 </tbody></table></div><p class="help">${r.mode==='private'?`家庭合计转付4分给非玩家照料者（女方${r.motherFee}、男方${r.maleFee}）；费用分担不改变家庭总支出。`:r.mode==='public'?'集体照料由非玩家照料人员承担，实际新增记工4分；晚间家务仍需处理。':r.family?'男社员接手半日家庭事务与一项晚间家务，夫妻出工和个人所得分别核算。':'女社员自己处理一格家庭事务，出工半天。'} 工分为三次代表性安排的示范记账，不能换算十年实际收入。</p></section>`;}
 function receiptSummary(r){
   const care = {
@@ -316,7 +339,7 @@ function receiptSummary(r){
   const nextGrant = GRANTS[r.round+1];
   const coupleRoundNet = r.motherNet+r.maleNet;
   const coupleTotalNet = r.after.points[1]+r.after.points[2];
-  return `<section class="receipt-summary" aria-labelledby="receipt-title"><h3 id="receipt-title">本轮结算一览</h3><p><strong>${care}</strong> 三人合计出工${r.fieldTotal}个半日。</p><div class="receipt-grid">${groups.map(([value,detail],i)=>`<div class="receipt-group" style="--role:${ROLES[i].color}"><span>第${i+1}组 · ${ROLES[i].name}</span><strong>${value}</strong><small>${detail}</small></div>`).join('')}</div><p class="couple-summary"><strong>夫妻账目（第2＋3组）</strong><span>本轮合计净得 <strong>${coupleRoundNet} 分</strong></span><span>截至本轮累计净得 <strong>${coupleTotalNet} 分</strong></span></p>${nextGrant===undefined?'':`<p class="carryover">本轮余下的 ${r.remaining} 点资源加上下一轮新增的 ${nextGrant} 点，下一轮可用 <strong>${r.remaining+nextGrant} 点</strong>。</p>`}</section>`;
+  return `<section class="receipt-summary" aria-labelledby="receipt-title"><h3 id="receipt-title">本轮结算一览</h3><p><strong>${care}</strong> ${r.adjusted?adjustmentSummary(r):`三人合计出工${r.fieldTotal}个半日。`}</p><div class="receipt-grid">${groups.map(([value,detail],i)=>`<div class="receipt-group" style="--role:${ROLES[i].color}"><span>第${i+1}组 · ${ROLES[i].name}</span><strong>${value}</strong><small>${detail}</small></div>`).join('')}</div><p class="couple-summary"><strong>夫妻账目（第2＋3组）</strong><span>本轮合计净得 <strong>${coupleRoundNet} 分</strong></span><span>截至本轮累计净得 <strong>${coupleTotalNet} 分</strong></span></p>${nextGrant===undefined?'':`<p class="carryover">本轮余下的 ${r.remaining} 点资源加上下一轮新增的 ${nextGrant} 点，下一轮可用 <strong>${r.remaining+nextGrant} 点</strong>。</p>`}</section>`;
 }
 function roundScreen(){const i=roundIndex(),e=ERAS[i],r=currentResult();
   if(state.step==='receipt')return `${head(`第${i+1}轮 · ${e.years} · 已结算`,'这一阶段，谁获得了什么，又承担了什么？','')}${receiptSummary(r)}${budget(r)}${ledger(r)}<div class="actions split">${button('返回本轮修改','revise')}${i<2?button(`进入第${i+2}轮 · ${ERAS[i+1].years} →`,'next','primary'):button('揭晓长期结局 →','ending','primary')}</div>`;
@@ -331,14 +354,20 @@ function roleSummary(c,i){const facts=careerFacts(c);if(i===0)return `累计工�
   if(i===2)return `累计净得${c.points[2]}；家庭分担${c.familyCount}轮、付费${c.feeCount}轮（共${c.feeTotal}分）、带工${c.mentorCount}轮。累计负担${c.burdens[2]}：${burdenLabel(c.burdens[2])}。`;
   return `组织资源余${c.reserve}点；两组统一评工${facts.evaluationCount}轮，累计出工${c.field}个半日，集体示范记工${c.collective}分。出勤不能单独代表照料和分配的改善。`;
 }
+function adjustmentSummary(r){
+  const work=r.dispatched?(r.filledVacancy?'第三组外派，第一组补上半日重活。':'第三组外派，第一组未补上重活岗位。'):'第三组留队。';
+  const staff=r.nurseryStaff?(r.careCredit?'本队安排一名社员照料半天，托儿组实际使用，照料者记4分。':'本队为托儿组安排一人半天，托儿组本轮未使用。'):'本队未安排小托儿组。';
+  return `${work}${staff} 本队田间出工共${r.fieldTotal+r.localStaffField}个半日。`;
+}
 function endingComparison(results,main){
   if(!state.originalThirdRound)return '';
-  const {plan,agreements}=state.originalThirdRound;
-  const original=resolveRound(results[1].after,plan,agreements);
+  const {plan,agreements,adjustmentRules}=state.originalThirdRound;
+  const original=resolveRound(results[1].after,plan,agreements,true,adjustmentRules===true);
   const revised=results[2];
   const a=original.after,b=revised.after;
   const rows=[
     ['合作社主结局',endingCatalog(a).main.find(e=>e.matched).title,main.title],
+    ['第三轮外派、补位与托儿',original.adjusted?adjustmentSummary(original):'按本局原先的派工安排结算',revised.adjusted?adjustmentSummary(revised):'按本局原先的派工安排结算'],
     ['第三轮照料安排',original.actual[1].title,revised.actual[1].title],
     ['第一组',`${a.points[0]}分 · 经验${a.skill}点 · 负担${a.burdens[0]}点`,`${b.points[0]}分 · 经验${b.skill}点 · 负担${b.burdens[0]}点`],
     ['第二组',`${a.points[1]}分 · 负担${a.burdens[1]}点`,`${b.points[1]}分 · 负担${b.burdens[1]}点`],
@@ -348,7 +377,7 @@ function endingComparison(results,main){
   ];
   return `<section class="ending-comparison" aria-labelledby="comparison-title"><h3 id="comparison-title">第三轮重选前后</h3><p>两种结果都从相同的前两轮出发。工分、经验和负担按三轮累计。</p><table><thead><tr><th scope="col">比较项目</th><th scope="col">原结果</th><th scope="col">重选结果</th></tr></thead><tbody>${rows.map(([label,before,after])=>`<tr><th scope="row">${label}</th><td>${before}</td><td class="${before!==after?'changed':''}">${after}</td></tr>`).join('')}</tbody></table></section>`;
 }
-function endingScreen(){const {career:c,results}=data(),cat=endingCatalog(c),main=cat.main.find(x=>x.matched);return `${head('到1962年前后 · 长期结局','三轮经历，留下了怎样的变化？','主结局、四组处境与负担记录共同组成结果。最后一轮的安排不会删除前期经历。')}<div class="actions">${button('查看全部结局与达成要求','all-endings','primary')}${button('查看三轮账目与协商记录','history')}</div><section class="result-hero"><div class="eyebrow">合作社主结局</div><h2>${main.title}</h2><p>${main.text}</p><div class="pills">${historyTags(c).map(t=>pill(t)).join('')}</div></section>${endingComparison(results,main)}${careerStats(c)}<div class="role-results">${ROLES.map((r,i)=>`<article class="role-result" style="--role:${r.color}">${roleHeader(i,`第${i+1}组 · ${r.name}`,cat.roles[i].find(x=>x.matched).title)}<p>${roleSummary(c,i)}</p></article>`).join('')}</div><div class="notice">第1、2组下工后的家庭劳动仍有记录；集体照料也由其他劳动者承担。制度配套形成，不等于性别平等已经实现。</div><div class="actions split">${button('重选第三轮并比较结果','revise-final')}${button('进入1970年代回望 →','discussion','primary')}</div>`;}
+function endingScreen(){const {career:c,results}=data(),cat=endingCatalog(c),main=cat.main.find(x=>x.matched);return `${head('到1962年前后 · 长期结局','三轮经历，留下了怎样的变化？','主结局、四组处境与负担记录共同组成结果。最后一轮的安排不会删除前期经历。')}<div class="actions">${button('查看全部结局与达成要求','all-endings','primary')}${button('查看三轮账目与协商记录','history')}</div><section class="result-hero"><div class="eyebrow">合作社主结局</div><h2>${main.title}</h2><p>${main.text}</p>${results[2].adjusted?`<p class="adjustment-outcome">${adjustmentSummary(results[2])}</p>`:''}<div class="pills">${historyTags(c).map(t=>pill(t)).join('')}</div></section>${endingComparison(results,main)}${careerStats(c)}<div class="role-results">${ROLES.map((r,i)=>`<article class="role-result" style="--role:${r.color}">${roleHeader(i,`第${i+1}组 · ${r.name}`,cat.roles[i].find(x=>x.matched).title)}<p>${roleSummary(c,i)}</p></article>`).join('')}</div><div class="notice">第1、2组下工后的家庭劳动仍有记录；集体照料也由其他劳动者承担。制度配套形成，不等于性别平等已经实现。</div><div class="actions split">${button('重选第三轮并比较结果','revise-final')}${button('进入1970年代回望 →','discussion','primary')}</div>`;}
 function discussionScreen(){return `${head('1970年代回望 · 课堂讨论','制度的理想，怎样成为不同人的现实？','回望是根据本局经历作出的有条件推演，不宣称1962年后的历史会按游戏安排固定发展。')}<p class="big-question">机会和收入增加以后，<br>家庭中的劳动分担也改变了吗？</p><div class="discussion-grid"><article><span>01</span><h3>哪些改善有了延续？</h3><p>对照三轮记录，看看评工、岗位和照料的支持如何建立、停止或恢复。</p></article><article><span>02</span><h3>配套依靠谁的劳动？</h3><p>看看家庭事务、照料费用和无工分指导由谁承担。个人所得与家庭合计是否一致变化？</p></article><article><span>03</span><h3>如果这些安排继续</h3><p>妇女增加的出工和收入，能否同时带来长期家庭负担的改变？还缺少什么条件？</p></article></div><div class="actions">${button('返回长期结局','ending','primary')}${button('查看全部结局与达成要求','all-endings')}${button('查看三轮账目','history')}</div>`;}
 function render(){
   if(state.screen==='round'&&state.step!=='receipt'&&state.history.length===0){
@@ -365,9 +394,9 @@ function render(){
 }
 function showDialog(title,html){document.getElementById('dialog-title').textContent=title;document.getElementById('dialog-body').innerHTML=html;if(!dialog.open)dialog.showModal();}
 function allEndingsHtml(){const c=data().career,cat=endingCatalog(c),roleIndex=Number(endingCategory.replace('role','')),rows=endingCategory==='main'?cat.main:cat.roles[roleIndex];return `<p>每项下列条件须同时满足；按完整三轮正式结果核对。本轮预算均须合法，协议须实际兑现。勾选为本局已满足条件。</p><div class="ending-tabs" aria-label="选择结局类别">${[['main','八类主结局'],...ROLES.map((r,i)=>[`role${i}`,`第${i+1}组`])].map(([key,label])=>button(label,'ending-category','',`data-category="${key}" aria-pressed="${endingCategory===key}"`)).join('')}</div><div class="notice compact">两组统一评工${careerFacts(c).evaluationCount}轮；第二组全天出工${c.motherFull}轮、累计净得${c.points[1]}分；经验${c.skill}点；资源余${c.reserve}点。</div><h3>${endingCategory==='main'?'八类合作社主结局':ROLES[roleIndex].name+' · 角色结局'}</h3>${rows.map(e=>`<article class="ending-entry ${e.matched?'current-ending':''}"><div class="ending-title"><h3>${e.title}</h3>${e.matched?pill('本局结局'):''}</div>${e.text?`<p>${e.text}</p>`:''}<ul class="requirements">${e.requirements.map(r=>`<li class="${r.met?'met':''}"><span>${r.met?'✓ 已满足':'○ 未满足'}</span>${r.text}</li>`).join('')}</ul></article>`).join('')}<p class="help">角色结局还附加负担标签：0—3点较低，4—6点持续存在，7点及以上为较重负担。18分是课堂观察线，不是历史贫困线。</p>`;}
-function historyHtml(){const {results}=data();return results.map((r,i)=>`<details ${i===results.length-1?'open':''}><summary>第${i+1}轮 · ${ERAS[i].years} · ${ERAS[i].title}</summary>${budget(r)}${ledger(r)}<h4>协商记录</h4><p>${esc(state.notes[i]||'未填写')}</p><h4>实际兑现</h4><p>家庭分担：${r.family?'是':'否'}；男方照料付费：${r.maleFee}分；带工：${r.mentor?'是':'否'}；正式岗位：${r.formal?'是':'否'}。</p>${r.unused.map(t=>`<p>${t}</p>`).join('')}</details>`).join('');}
-function rulesHtml(){return `<h3>三阶段模拟怎样进行</h3><p>四组分别选择行动，公开意向后由涉及协议的组协商确认。主持人核对四组实际行动后统一结算，每个阶段正式结算一次。前三组累计工分与负担，第一组积累经验，第四组资源余额保留。没有共同方案表决、倒计时或超时提交。</p><p>三轮依次对应1953—1955、1956—1957、1958—1962三个阶段。每轮只模拟一次代表性农忙安排，工分和资源采用课堂设定。三轮结束后回望1970年代。第二组孩子会长大，一格家庭事务随阶段代表照料及必要家务。</p>
-<h3>前两轮岗位与照料</h3><p>第一轮须第四组留出试工位，且第一、三组达成带工协议，第一组才能实际试做重活。本村从第二轮开始可以开办农忙托儿点。第二轮，有试工经验的第一组可以独立申请派工，仍须第四组安排岗位。还没有经验的第一组须有带工才能试做。第三轮沿用原有的岗位经验和带工规则。</p><h3>每轮资源与组织成本</h3><table><tr><th>轮次</th><th>可用资源</th></tr><tr><td>第一轮</td><td>6点</td></tr><tr><td>第二轮</td><td>前轮余额＋4点</td></tr><tr><td>第三轮</td><td>前轮余额＋3点</td></tr></table><ul><li>原差别计价0点；仅第一组统一1点；两组统一首次或恢复2点，连续维持1点。</li><li>岗位学习2点，实际带工减为1点；本轮开始经验已有2点，提供正式岗位1点。</li><li>集体照料首次或恢复3点，连续开办2点。开办后无人使用也扣成本。</li><li>不能借下一轮资源，工分不能换资源。预算超额时第四组调整投入后再结算。</li></ul>
+function historyHtml(){const {results}=data();return results.map((r,i)=>`<details ${i===results.length-1?'open':''}><summary>第${i+1}轮 · ${ERAS[i].years} · ${ERAS[i].title}</summary>${budget(r)}${ledger(r)}<h4>协商记录</h4><p>${esc(state.notes[i]||'未填写')}</p><h4>实际兑现</h4>${r.adjusted?`<p>${adjustmentSummary(r)}</p>`:''}<p>家庭分担：${r.family?'是':'否'}；男方照料付费：${r.maleFee}分；带工：${r.mentor?'是':'否'}；正式岗位：${r.formal?'是':'否'}。</p>${r.unused.map(t=>`<p>${t}</p>`).join('')}</details>`).join('');}
+function rulesHtml(){return `<h3>三阶段模拟怎样进行</h3><p>四组分别选择行动，公开意向后由涉及协议的组协商确认。主持人核对四组实际行动后统一结算，每个阶段正式结算一次。前三组累计工分与负担，第一组积累经验，第四组资源余额保留。没有共同方案表决、倒计时或超时提交。</p><p>三轮依次在1953—1955、1956—1957、1961—1962各选一次代表性农忙。1958年开始的公社化作为第三轮的背景。每轮只模拟一次代表性农忙安排，工分和资源采用课堂设定。三轮结束后回望1970年代。第二组孩子会长大，一格家庭事务随阶段代表照料及必要家务。</p>
+<h3>前两轮岗位与照料</h3><p>第一轮须第四组留出试工位，且第一、三组达成带工协议，第一组才能实际试做重活。本村从第二轮开始可以开办农忙托儿点。第二轮，有试工经验的第一组可以独立申请派工，仍须第四组安排岗位。还没有经验的第一组须有带工才能试做。</p><h3>第三轮外派、补位与托儿</h3><p>第三组可外派全天，示范账记12分，本队田间出工为0。当轮无法接手家庭事务或带工，仍可分担邻里照料费。第一组有2点经验、选择重活且第四组落实岗位时，可补上空出的半日重活。当第三组留队时，沿用原有学习和派工规则。</p><p>第四组可安排一名额外的本队社员照料半天，这半天从本队田间出工中转入照料。小托儿组延续上轮安排需2点，新办需3点。第二组实际使用时另给照料人员记4分。外派工分和本队田间时间分列。</p><h3>每轮资源与组织成本</h3><table><tr><th>轮次</th><th>可用资源</th></tr><tr><td>第一轮</td><td>6点</td></tr><tr><td>第二轮</td><td>前轮余额＋4点</td></tr><tr><td>第三轮</td><td>前轮余额＋3点</td></tr></table><ul><li>原差别计价0点；仅第一组统一1点；两组统一首次或恢复2点，连续维持1点。</li><li>岗位学习2点，实际带工减为1点；本轮开始经验已有2点，提供正式岗位1点。</li><li>集体照料首次或恢复3点，连续开办2点。开办后无人使用也扣成本。</li><li>不能借下一轮资源，工分不能换资源。预算超额时第四组调整投入后再结算。</li></ul>
 <h3>记工与岗位冲突</h3><table><tr><th>半日劳动</th><th>女社员原计价</th><th>统一计价</th><th>男社员</th></tr><tr><td>普通劳动</td><td>3</td><td>5</td><td>5</td></tr><tr><td>重活</td><td>4</td><td>6</td><td>6</td></tr></table><p>每人最多两个半日田间劳动。共两个半日重活岗位，第一组获得半日重活后，男社员接受全天派工记11分，只接剩余重活则出工半天记6分。男社员家庭分担时只做半日重活记6分。第一组无岗位支持则执行全天普通劳动；休整行动只做半天普通劳动。</p>
 <h3>三项协议与备用</h3><ul><li>家庭分担需第二组选择家庭分担、第三组选择接手且双方同意。第三组承担半日家庭事务和一项晚间家务。</li><li>邻里照料合计4分，男方可承担0—4分。男方付费须双方确认数额；改数额清除费用签名。女方全部自付可自行选择。</li><li>带工需第一组经验不足2点，第四组提供支持，第一组实际实践，第一、三组均同意。组织成本减1，学习负担减1，指导者负担加1，不额外记工。</li><li>每轮重新签约。第二组条件不匹配时，按其备用自己处理家庭事务，或自付4分请邻里照料；第三组家庭分担未执行时，按其备用接受派工或只接重活。</li><li>双方已签但行动不匹配，不扣费用、不执行额外责任。各组自主选择行动，不能以多数票强迫其他组承担责任。</li></ul>
 <h3>经验与负担</h3><p>实际完成半日重活实践，每轮经验＋1，最高3点，不因暂停而消失。本轮开始已达2点并继续实践，才形成正式岗位。只申请或支持闲置不加经验。</p><table><tr><th>小组</th><th>当轮负担增加</th></tr><tr><td>第一组</td><td>普通劳动＋2；学习重活＋3，实际带工降为＋2；正式岗位＋2；半天出工与休整＋1。</td></tr><tr><td>第二组</td><td>自己处理家庭事务＋3；邻里或集体照料＋2；家庭分担＋1。</td></tr><tr><td>第三组</td><td>接受派工或只接重活＋1；家庭分担＋3；实际带工另＋1。</td></tr></table><p>累计负担0—3点标记较低，4—6点持续存在，7点及以上较重积累。是课堂指数，不等于小时数或健康情况。</p>
@@ -386,7 +415,7 @@ document.addEventListener('click',async event=>{const el=event.target.closest('[
   if(action==='negotiate'){state.step='negotiate';rerender=true;}
   if(action==='back-intent'){state.step='intent';rerender=true;}
   if(action==='agreement'){const k=el.dataset.kind,i=Number(el.dataset.signer);state.agreements[k][i]=!state.agreements[k][i];rerender=true;}
-  if(action==='settle'&&state.screen==='round'&&state.step==='negotiate'&&currentResult().valid){state.history.push({plan:structuredClone(state.plan),agreements:structuredClone(state.agreements),stageRules:true});state.step='receipt';rerender=true;}
+  if(action==='settle'&&state.screen==='round'&&state.step==='negotiate'&&currentResult().valid){state.history.push({plan:structuredClone(state.plan),agreements:structuredClone(state.agreements),stageRules:true,adjustmentRules:true});state.step='receipt';rerender=true;}
   if(action==='next'&&state.step==='receipt'&&state.history.length<3){state.step='intent';state.agreements=emptyAgreements();rerender=true;}
   if((action==='revise'&&state.step==='receipt')||(action==='revise-final'&&state.history.length===3)){const record=state.history.pop();if(action==='revise-final')state.originalThirdRound??=record;state.plan=structuredClone(record.plan);state.agreements=structuredClone(record.agreements);state.screen='round';state.step='negotiate';rerender=true;}
   if(action==='ending'&&state.history.length===3){state.screen='ending';rerender=true;}
