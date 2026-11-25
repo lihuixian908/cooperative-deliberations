@@ -13,6 +13,7 @@
 .receipt-group span,.receipt-group small{font-size:15px;line-height:1.5}
 .receipt-group strong{font-size:27px;line-height:1.35;color:var(--role)}
 .receipt-summary .couple-summary{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 20px;margin:13px 0 0;padding:7px 12px;background:var(--green-light);font-size:16px}
+.receipt-summary .receipt-shortfall{margin:12px 0 0;font-size:16px;color:var(--red)}
 .receipt-summary .carryover{margin:14px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:16px}
 .ending-comparison table{width:100%;border-collapse:collapse;font-size:16px;line-height:1.5}
 .ending-comparison th,.ending-comparison td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line)}
@@ -419,7 +420,7 @@ function receiptSummary(r){
   const nextGrant = GRANTS[r.round+1];
   const coupleRoundNet = r.motherNet+r.maleNet;
   const coupleTotalNet = r.after.points[1]+r.after.points[2];
-  return `<section class="receipt-summary" aria-labelledby="receipt-title"><h3 id="receipt-title">本轮结算一览</h3><p>${r.splitHousework?'':`<strong>${care}</strong> `}${r.adjusted?adjustmentSummary(r):`三人合计出工${r.fieldTotal}个半日。`}</p><div class="receipt-grid">${groups.map(([value,detail],i)=>`<div class="receipt-group" style="--role:${ROLES[i].color}"><span>第${i+1}组 · ${ROLES[i].name}</span><strong>${value}</strong><small>${detail}</small></div>`).join('')}</div><p class="couple-summary"><strong>夫妻账目（第2＋3组）</strong><span>本轮合计净得 <strong>${coupleRoundNet} 分</strong></span><span>截至本轮累计净得 <strong>${coupleTotalNet} 分</strong></span></p>${nextGrant===undefined?'':`<p class="carryover">本轮余下的 ${r.remaining} 点资源加上下一轮新增的 ${nextGrant} 点，下一轮可用 <strong>${r.remaining+nextGrant} 点</strong>。</p>`}</section>`;
+  return `<section class="receipt-summary" aria-labelledby="receipt-title"><h3 id="receipt-title">本轮结算一览</h3><p>${r.splitHousework?'':`<strong>${care}</strong> `}${r.adjusted?adjustmentSummary(r):`三人合计出工${r.fieldTotal}个半日。`}</p><div class="receipt-grid">${groups.map(([value,detail],i)=>`<div class="receipt-group" style="--role:${ROLES[i].color}"><span>第${i+1}组 · ${ROLES[i].name}</span><strong>${value}</strong><small>${detail}</small></div>`).join('')}</div>${r.motherNet<0?`<p class="receipt-shortfall">第二组本轮挣了${r.motherGross}分，照料费${r.motherFee}分，比本轮挣到的工分多${r.motherFee-r.motherGross}分，因此本轮净得−${-r.motherNet}分。</p>`:''}<p class="couple-summary"><strong>夫妻账目（第2＋3组）</strong><span>本轮合计净得 <strong>${coupleRoundNet} 分</strong></span><span>截至本轮累计净得 <strong>${coupleTotalNet} 分</strong></span></p>${nextGrant===undefined?'':`<p class="carryover">本轮余下的 ${r.remaining} 点资源加上下一轮新增的 ${nextGrant} 点，下一轮可用 <strong>${r.remaining+nextGrant} 点</strong>。</p>`}</section>`;
 }
 function roundScreen(){const i=roundIndex(),e=ERAS[i],r=currentResult();
   if(state.step==='receipt')return `${head(`第${i+1}轮 · ${e.years} · 已结算`,'这一阶段，谁获得了什么，又承担了什么？','')}${receiptSummary(r)}${budget(r)}${ledger(r)}<div class="actions split">${button('返回本轮修改','revise')}${i<2?button(`进入第${i+2}轮 · ${ERAS[i+1].years} →`,'next','primary'):button('揭晓长期结局 →','ending','primary')}</div>`;
@@ -521,6 +522,11 @@ const ENDING_READINGS=[
     discussion:'如果队里下一次缺人，谁会先少出工？怎样做才能让照料安排继续？'
   }
 ];
+function roleEndingTitle(entry,index,last){
+  if(index!==2||!last.dispatched)return entry.title;
+  const dispatchTitles=['前两轮参与家庭分担','本局多轮分担照料费用','前两轮参与带工','本局曾提供支持','本局未参与照料分担、付费或带工'];
+  return `第三轮外派 · ${dispatchTitles[entry.id]}`;
+}
 function endingGroup(id){return ENDING_GROUPS.find(group=>group.ids.includes(id));}
 function endingLabel(ending){return `${endingGroup(ending.id).label} · ${ending.title}`;}
 function endingEvidence(id,c,results){
@@ -542,14 +548,18 @@ function endingEvidence(id,c,results){
 function endingStory(main,c,results){
   const reading=ENDING_READINGS[main.id];
   const last=results[2];
+  const careTradeoff=main.id===4&&last.nurseryStaff&&last.careCredit>0&&!last.formal;
+  const tradeoff=careTradeoff?(last.youthStaff
+    ?`第一组做了半天托儿，获得4分照料工分，另半天排的是普通农活。她的照料劳动被记进了集体账目，${last.before.skill>0?'前两轮积累的重活经验这次没有转为正式岗位':'本轮也没有落实正式重活岗位'}。`
+    :'本队已经落实小托儿组，照料者获得了记工。第一组本轮还没有取得正式重活岗位。照料支持和重活机会在这局走到了不同的阶段。'):'';
   return `<div class="ending-story">
     <div><h3>本局账目</h3><p>${endingEvidence(main.id,c,results)}</p>${last.adjusted?`<p class="adjustment-outcome">${last.splitHousework?houseworkSummary(last):adjustmentSummary(last)}</p>`:''}</div>
-    <div><h3>回到导修问题</h3><p><strong>${reading.question}</strong></p><p>${reading.evaluation}${main.id>=6&&c.reserve===0?'本局组织资源已经用完，下一轮要延续这些安排，还得重新筹措资源。':''}</p></div>
+    <div><h3>回到导修问题</h3><p><strong>${reading.question}</strong></p><p>${tradeoff||reading.evaluation}${main.id>=6&&c.reserve===0?'本局组织资源已经用完，下一轮要延续这些安排，还得重新筹措资源。':''}</p></div>
     <div><h3>贺萧笔下的妇女处境</h3><p>${reading.experience}</p><p class="ending-source">${reading.source}</p></div>
-    <div class="ending-prompt"><h3>复盘问题</h3><p>${reading.discussion}</p></div>
+    <div class="ending-prompt"><h3>复盘问题</h3><p>${careTradeoff&&last.youthStaff?'如果第一组下次要继续争取重活，托儿由谁接手，她还出得了工吗？':reading.discussion}</p></div>
   </div>`;
 }
-function endingScreen(){const {career:c,results}=data(),cat=endingCatalog(c),main=cat.main.find(x=>x.matched),group=endingGroup(main.id);return `${head('到1962年前后 · 长期结局','三轮经历，留下了怎样的变化？','主结局、四组处境与负担记录共同组成结果。最后一轮的安排不会删除前期经历。')}<div class="actions">${button('查看全部结局与达成要求','all-endings','primary')}${button('查看三轮账目与协商记录','history')}</div><section class="result-hero" data-tone="${group.tone}"><div class="eyebrow">${group.label} · 合作社主结局</div><h2>${main.title}</h2>${endingStory(main,c,results)}<div class="pills">${historyTags(c).map(t=>pill(t)).join('')}</div></section>${endingComparison(results,main)}${careerStats(c)}<div class="role-results">${ROLES.map((r,i)=>`<article class="role-result" style="--role:${r.color}">${roleHeader(i,`第${i+1}组 · ${r.name}`,cat.roles[i].find(x=>x.matched).title)}<p>${roleSummary(c,i)}</p></article>`).join('')}</div><div class="notice">第1、2组下工后的家庭劳动仍有记录；集体照料也由其他劳动者承担。制度配套形成，不等于性别平等已经实现。</div><div class="actions split">${button('重选第三轮并比较结果','revise-final')}${button('进入1970年代回望 →','discussion','primary')}</div>`;}
+function endingScreen(){const {career:c,results}=data(),cat=endingCatalog(c),main=cat.main.find(x=>x.matched),group=endingGroup(main.id);return `${head('到1962年前后 · 长期结局','三轮经历，留下了怎样的变化？','主结局、四组处境与负担记录共同组成结果。最后一轮的安排不会删除前期经历。')}<div class="actions">${button('查看全部结局与达成要求','all-endings','primary')}${button('查看三轮账目与协商记录','history')}</div><section class="result-hero" data-tone="${group.tone}"><div class="eyebrow">${group.label} · 合作社主结局</div><h2>${main.title}</h2>${endingStory(main,c,results)}<div class="pills">${historyTags(c).map(t=>pill(t)).join('')}</div></section>${endingComparison(results,main)}${careerStats(c)}<div class="role-results">${ROLES.map((r,i)=>`<article class="role-result" style="--role:${r.color}">${roleHeader(i,`第${i+1}组 · ${r.name}`,roleEndingTitle(cat.roles[i].find(x=>x.matched),i,results[2]))}<p>${roleSummary(c,i)}</p></article>`).join('')}</div><div class="notice">第1、2组下工后的家庭劳动仍有记录；集体照料也由其他劳动者承担。制度配套形成，不等于性别平等已经实现。</div><div class="actions split">${button('重选第三轮并比较结果','revise-final')}${button('进入1970年代回望 →','discussion','primary')}</div>`;}
 function discussionScreen(){return `${head('1970年代回望 · 课堂讨论','制度的理想，怎样成为不同人的现实？','回望是根据本局经历作出的有条件推演，不宣称1962年后的历史会按游戏安排固定发展。')}<p class="big-question">机会和收入增加以后，<br>家庭中的劳动分担也改变了吗？</p><div class="discussion-grid"><article><span>01</span><h3>哪些改善有了延续？</h3><p>对照三轮记录，看看评工、岗位和照料的支持如何建立、停止或恢复。</p></article><article><span>02</span><h3>配套依靠谁的劳动？</h3><p>看看家庭事务、照料费用和无工分指导由谁承担。个人所得与家庭合计是否一致变化？</p></article><article><span>03</span><h3>如果这些安排继续</h3><p>妇女增加的出工和收入，能否同时带来长期家庭负担的改变？还缺少什么条件？</p></article></div><div class="actions">${button('返回长期结局','ending','primary')}${button('查看全部结局与达成要求','all-endings')}${button('查看三轮账目','history')}</div>`;}
 function render(){
   state.declinedAgreements??={};
@@ -570,16 +580,16 @@ function render(){
   document.getElementById('history-button').hidden=state.history.length===0;save();
 }
 function showDialog(title,html){document.getElementById('dialog-title').textContent=title;document.getElementById('dialog-body').innerHTML=html;if(!dialog.open)dialog.showModal();}
-function endingEntry(e,group){
+function endingEntry(e,group,title=e.title){
   const reading=group?ENDING_READINGS[e.id]:null;
-  return `<article class="ending-entry ${e.matched?'current-ending':''}"><div class="ending-title"><h3>${e.title}</h3><div class="ending-labels">${group?`<span class="ending-kind">${group.label}</span>`:''}${e.matched?pill('本局结局'):''}</div></div>${e.text?`<p>${e.text}</p>`:''}<ul class="requirements">${e.requirements.map(r=>`<li class="${r.met?'met':''}"><span>${r.met?'✓ 已满足':'○ 未满足'}</span>${r.text}</li>`).join('')}</ul>${reading?`<details class="ending-reading"><summary>查看导修评价和文本经历</summary><p><strong>${reading.question}</strong></p><p>${reading.evaluation}</p><p>${reading.experience}</p><p class="ending-source">${reading.source}</p></details>`:''}</article>`;
+  return `<article class="ending-entry ${e.matched?'current-ending':''}"><div class="ending-title"><h3>${title}</h3><div class="ending-labels">${group?`<span class="ending-kind">${group.label}</span>`:''}${e.matched?pill('本局结局'):''}</div></div>${e.text?`<p>${e.text}</p>`:''}<ul class="requirements">${e.requirements.map(r=>`<li class="${r.met?'met':''}"><span>${r.met?'✓ 已满足':'○ 未满足'}</span>${r.text}</li>`).join('')}</ul>${reading?`<details class="ending-reading"><summary>查看导修评价和文本经历</summary><p><strong>${reading.question}</strong></p><p>${reading.evaluation}</p><p>${reading.experience}</p><p class="ending-source">${reading.source}</p></details>`:''}</article>`;
 }
 function mainEndingCatalog(rows){
   const filters=[{tone:'all',label:'全部主结局'},...ENDING_GROUPS];
   const groups=ENDING_GROUPS.filter(group=>endingFilter==='all'||group.tone===endingFilter);
   return `<div class="ending-tabs ending-filter" role="group" aria-label="按类别筛选主结局">${filters.map(({tone,label})=>button(label,'ending-filter','',`data-filter="${tone}" aria-pressed="${endingFilter===tone}"`)).join('')}</div><div class="ending-list">${groups.map(group=>`<section class="ending-category" data-tone="${group.tone}"><h3>${group.label}</h3>${group.ids.map(id=>endingEntry(rows[id],group)).join('')}</section>`).join('')}</div>`;
 }
-function allEndingsHtml(){const c=data().career,cat=endingCatalog(c),roleIndex=Number(endingCategory.replace('role','')),rows=endingCategory==='main'?cat.main:cat.roles[roleIndex];return `<p>每项下列条件须同时满足；按完整三轮正式结果核对。本轮预算均须合法，协议须实际兑现。勾选为本局已满足条件。</p><div class="ending-tabs" aria-label="选择结局类别">${[['main','八种主结局'],...ROLES.map((r,i)=>[`role${i}`,`第${i+1}组`])].map(([key,label])=>button(label,'ending-category','',`data-category="${key}" aria-pressed="${endingCategory===key}"`)).join('')}</div><div class="notice compact">两组统一评工${careerFacts(c).evaluationCount}轮；第二组全天出工${c.motherFull}轮、累计净得${c.points[1]}分；经验${c.skill}点；资源余${c.reserve}点。</div>${endingCategory==='main'?mainEndingCatalog(rows):`<h3>${ROLES[roleIndex].name} · 角色结局</h3>${rows.map(e=>endingEntry(e)).join('')}`}<p class="help">角色结局还附加负担标签：0—3点较低，4—6点持续存在，7点及以上为较重负担。18分是课堂观察线，不是历史贫困线。</p>`;}
+function allEndingsHtml(){const {career:c,results}=data(),cat=endingCatalog(c),roleIndex=Number(endingCategory.replace('role','')),rows=endingCategory==='main'?cat.main:cat.roles[roleIndex];return `<p>每项下列条件须同时满足；按完整三轮正式结果核对。本轮预算均须合法，协议须实际兑现。勾选为本局已满足条件。</p><div class="ending-tabs" aria-label="选择结局类别">${[['main','八种主结局'],...ROLES.map((r,i)=>[`role${i}`,`第${i+1}组`])].map(([key,label])=>button(label,'ending-category','',`data-category="${key}" aria-pressed="${endingCategory===key}"`)).join('')}</div><div class="notice compact">两组统一评工${careerFacts(c).evaluationCount}轮；第二组全天出工${c.motherFull}轮、累计净得${c.points[1]}分；经验${c.skill}点；资源余${c.reserve}点。</div>${endingCategory==='main'?mainEndingCatalog(rows):`<h3>${ROLES[roleIndex].name} · 角色结局</h3>${rows.map(e=>endingEntry(e,null,roleEndingTitle(e,roleIndex,results[2]))).join('')}`}<p class="help">角色结局还附加负担标签：0—3点较低，4—6点持续存在，7点及以上为较重负担。18分是课堂观察线，不是历史贫困线。</p>`;}
 function historyHtml(){const {results}=data();return results.map((r,i)=>`<details ${i===results.length-1?'open':''}><summary>第${i+1}轮 · ${ERAS[i].years} · ${ERAS[i].title}</summary>${budget(r)}${ledger(r)}<h4>协商记录</h4><p>${esc(state.notes[i]||'未填写')}</p><h4>实际兑现</h4>${r.adjusted?`<p>${adjustmentSummary(r)}</p>`:''}<p>家庭分担：${r.family||r.cookingShared?'是':'否'}；男方照料付费：${r.maleFee}分；带工：${r.mentor?'是':'否'}；正式岗位：${r.formal?'是':'否'}。</p>${r.unused.map(t=>`<p>${t}</p>`).join('')}</details>`).join('');}
 function rulesHtml(){return `<h3>三阶段模拟怎样进行</h3><p>四组独立登记行动和适用的备用方案，选择公布后锁定。只有涉及协议的组需要确认。协议未达成时执行备用，只开放受影响的选择。预算超额时第四组可削减已选投入。主持人核对后每阶段结算一次。前三组累计工分与负担，第一组积累经验，第四组资源余额保留。没有共同方案表决、倒计时或超时提交。</p><p>三轮依次在1953—1955、1956—1957、1961—1962各选一次代表性农忙。1958年开始的公社化作为第三轮的背景。每轮只模拟一次代表性农忙安排，工分和资源采用课堂设定。三轮结束后回望1970年代。前两轮用一项家庭事务代表照料及必要家务。第三轮分开安排做饭备柴和照料。</p>
 <h3>前两轮岗位与照料</h3><p>第一轮须第四组留出试工位，且第一、三组达成带工协议，第一组才能实际试做重活。本村从第二轮开始可以开办农忙托儿点。第二轮，有试工经验的第一组可以独立申请派工，仍须第四组安排岗位。还没有经验的第一组须有带工才能试做。</p><h3>第三轮食堂停办后的排班</h3><p>本村食堂停办，夫妻须分别安排做饭备柴和照料，两项各占半天。第三组可以留队出工半天、接手其中一项，经夫妻确认后执行。哪项安排没落实，就由第二组接手，占她半天出工时间。照料费仍为4分，照料费用从个人工分中扣除。</p><h3>第三轮外派、补位与托儿</h3><p>第三组可外派全天，示范账记12分，本队田间出工为0。当轮无法接手家庭事务或带工，仍可分担邻里照料费。第一组有2点经验、选择重活且第四组落实岗位时，可补上空出的半日重活。当第三组留队时，沿用原有学习和派工规则。</p><p>第四组可安排另一名本队社员或报名的第一组照料半天。这半天从田间出工转为照料，第一组如果获安排，另半天做普通农活。第一组未报名时，指派她的方案不消耗托儿资源，也无法提供托儿。小托儿组延续上轮安排需2点，新办需3点。第二组实际使用时另给照料人员记4分。外派工分和本队田间时间分列。</p><h3>每轮资源与组织成本</h3><table><tr><th>轮次</th><th>可用资源</th></tr><tr><td>第一轮</td><td>6点</td></tr><tr><td>第二轮</td><td>前轮余额＋4点</td></tr><tr><td>第三轮</td><td>前轮余额＋3点</td></tr></table><ul><li>原差别计价0点；仅第一组统一1点；两组统一首次或恢复2点，连续维持1点。</li><li>岗位学习2点，实际带工减为1点；本轮开始经验已有2点，提供正式岗位1点。</li><li>集体照料首次或恢复3点，连续开办2点。开办后无人使用也扣成本。</li><li>不能借下一轮资源，工分不能换资源。预算超额时第四组调整投入后再结算。</li></ul>
