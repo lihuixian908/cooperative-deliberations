@@ -220,7 +220,15 @@ function currentResult(){const d=data();return state.step==='receipt'||state.scr
 function head(kicker,title,text){return `<header class="section-head"><div class="eyebrow">${kicker}</div><h2>${title}</h2><p class="lead">${text}</p></header>`;}
 function roleIcon(index,size=''){return '<span class="role-avatar '+size+'" aria-hidden="true">'+ROLE_ICON_SVGS[index]+'</span>';}
 function roleHeader(index,label,name){return '<div class="role-heading">'+roleIcon(index)+'<div><div class="eyebrow">'+label+'</div><h3>'+name+'</h3></div></div>';}
-function roleCards(){return `<div class="role-grid">${ROLES.map((r,i)=>`<article class="role-card" style="--role:${r.color}">${roleHeader(i,`第${i+1}组`,r.name)}<p>${r.interest}</p></article>`).join('')}</div>`;}
+function roleCards(){
+  const relationships=[
+    '以个人身份出工，家庭成员情况留白。',
+    '和第三组是夫妻，负责家中大部分照料。',
+    '是第二组的丈夫，两人可以协商照料和费用。',
+    '代表合作社，使用集体预算安排生产和照料。'
+  ];
+  return `<div class="role-grid">${ROLES.map((r,i)=>`<article class="role-card" style="--role:${r.color}">${roleHeader(i,`第${i+1}组`,r.name)}<p><strong>${relationships[i]}</strong><br>${r.interest}</p></article>`).join('')}</div>`;
+}
 function eraStrip(){const n=roundIndex();return `<nav class="timeline" aria-label="三个历史阶段">${ERAS.map((e,i)=>`<div class="era ${i===n?'active':''} ${state.history.length>i?'completed':''}" ${i===n?'aria-current="step"':''}><span>第${i+1}轮 · ${e.years}</span><b>${e.title}</b><small>${state.history.length>i?'已结算':i===n&&state.screen==='round'?'当前阶段':e.theme}</small></div>`).join('')}</nav>`;}
 function stat(label,value,note=''){return `<div class="metric"><span>${label}</span><strong>${value}</strong>${note?`<small>${note}</small>`:''}</div>`;}
 function careerStats(c){return `<div class="metrics">${stat('累计个人示范工分',c.points.join(' / '),'依次为第1、2、3组')}${stat('岗位经验',`${c.skill} / 3`,'前两轮积累决定第三轮岗位')}${stat('累计负担',c.burdens.join(' / '),'各组分别累积，7点起标记较高')}${stat('夫妻累计合计',c.points[1]+c.points[2],'第二组＋第三组个人净得')}</div>`;}
