@@ -12,6 +12,7 @@
 .receipt-group{display:grid;gap:2px;padding-left:12px;border-left:3px solid var(--role)}
 .receipt-group span,.receipt-group small{font-size:15px;line-height:1.5}
 .receipt-group strong{font-size:27px;line-height:1.35;color:var(--role)}
+.receipt-summary .couple-summary{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 20px;margin:13px 0 0;padding:7px 12px;background:var(--green-light);font-size:16px}
 .receipt-summary .carryover{margin:14px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:16px}
 .ending-comparison table{width:100%;border-collapse:collapse;font-size:16px;line-height:1.5}
 .ending-comparison th,.ending-comparison td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line)}
@@ -276,7 +277,9 @@ function receiptSummary(r){
     [`余 ${r.remaining}点`, `可用${r.available}点 · 投入${r.spent}点`]
   ];
   const nextGrant = GRANTS[r.round+1];
-  return `<section class="receipt-summary" aria-labelledby="receipt-title"><h3 id="receipt-title">本轮结算一览</h3><p><strong>${care}</strong> 三人合计出工${r.fieldTotal}个半日。</p><div class="receipt-grid">${groups.map(([value,detail],i)=>`<div class="receipt-group" style="--role:${ROLES[i].color}"><span>第${i+1}组 · ${ROLES[i].name}</span><strong>${value}</strong><small>${detail}</small></div>`).join('')}</div>${nextGrant===undefined?'':`<p class="carryover">本轮余下的 ${r.remaining} 点资源加上下一轮新增的 ${nextGrant} 点，下一轮可用 <strong>${r.remaining+nextGrant} 点</strong>。</p>`}</section>`;
+  const coupleRoundNet = r.motherNet+r.maleNet;
+  const coupleTotalNet = r.after.points[1]+r.after.points[2];
+  return `<section class="receipt-summary" aria-labelledby="receipt-title"><h3 id="receipt-title">本轮结算一览</h3><p><strong>${care}</strong> 三人合计出工${r.fieldTotal}个半日。</p><div class="receipt-grid">${groups.map(([value,detail],i)=>`<div class="receipt-group" style="--role:${ROLES[i].color}"><span>第${i+1}组 · ${ROLES[i].name}</span><strong>${value}</strong><small>${detail}</small></div>`).join('')}</div><p class="couple-summary"><strong>夫妻账目（第2＋3组）</strong><span>本轮合计净得 <strong>${coupleRoundNet} 分</strong></span><span>截至本轮累计净得 <strong>${coupleTotalNet} 分</strong></span></p>${nextGrant===undefined?'':`<p class="carryover">本轮余下的 ${r.remaining} 点资源加上下一轮新增的 ${nextGrant} 点，下一轮可用 <strong>${r.remaining+nextGrant} 点</strong>。</p>`}</section>`;
 }
 function roundScreen(){const i=roundIndex(),e=ERAS[i],r=currentResult();
   if(state.step==='receipt')return `${head(`第${i+1}轮 · ${e.years} · 已结算`,'这一阶段，谁获得了什么，又承担了什么？','')}${receiptSummary(r)}${budget(r)}${ledger(r)}<div class="actions split">${button('返回本轮修改','revise')}${i<2?button(`进入第${i+2}轮 · ${ERAS[i+1].years} →`,'next','primary'):button('揭晓长期结局 →','ending','primary')}</div>`;
