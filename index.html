@@ -232,6 +232,7 @@ function historyTags(c){const tags=[];
 function freshState(){return {version:VERSION,screen:'home',step:'intent',history:[],plan:freshPlan(),agreements:emptyAgreements(),notes:['','',''],originalThirdRound:null};}
 function validateState(s){try{
   if(!s||s.version!==VERSION||!['home','round','ending','discussion'].includes(s.screen)||!['intent','negotiate','receipt'].includes(s.step)||!Array.isArray(s.history)||s.history.length>3||!validPlan(s.plan)||!validAgreements(s.agreements)||!Array.isArray(s.notes)||s.notes.length!==3||s.notes.some(v=>typeof v!=='string'))return false;
+  if(s.declinedAgreements!==undefined&&(!s.declinedAgreements||typeof s.declinedAgreements!=='object'||Array.isArray(s.declinedAgreements)||Object.entries(s.declinedAgreements).some(([key,value])=>!Object.hasOwn(AGREEMENTS,key)||value!==true)))return false;
   const {results}=replay(s.history);
   if(s.originalThirdRound!=null){
     if(results.length<2)return false;
@@ -280,10 +281,10 @@ function youthPracticeTitle(c){
   return 'B · 申请接下本队半日重活岗位';
 }
 const householdCareOptions={home:'第二组自己照料',private:'请亲邻代看',public:'使用本队小托儿组',family:'请第三组接手照料'};
-function optionsFor(field){
+function optionsFor(field,allowed){
   const c=data().career;
   const choices=CHOICES[field].filter(([value])=>!(c.rounds===0&&field==='motherAction'&&value==='public')&&!(c.rounds<2&&(field==='maleAction'&&(value==='dispatch'||value==='cook')||field==='youthAction'&&value==='nursery')));
-  return choices.map(([value,title])=>{
+  return choices.filter(([value])=>allowed===null||allowed.includes(value)).map(([value,title])=>{
     let t=title;
     if(field==='youthAction'&&value==='practice')t=youthPracticeTitle(c);
     if(field==='evaluation'&&value===2)t+=` · ${c.evaluations.at(-1)===2?1:2}点`;
@@ -307,36 +308,70 @@ function optionsFor(field){
     return `<option value="${esc(String(value))}" ${state.plan[field]===value?'selected':''}>${t}</option>`;
   }).join('');
 }
-function select(field,label){return `<label class="choice-label">${label}<select data-plan="${field}" aria-label="${FIELD_LABELS[field]}">${optionsFor(field)}</select></label>`;}
-function actionForms(r){
+
+function eligibleAgreements(r){
+  const p=r.plan;
+  const matchingCare=p.motherAction==='family'&&p.maleAction==='care';
+  const matchingCooking=r.splitHousework&&p.cooking==='partner'&&p.maleAction==='cook';
+  return [
+    ...(matchingCare||matchingCooking?['family']:[]),
+    ...(p.motherAction==='private'&&p.maleFee>0?['fee']:[]),
+    ...(!r.dispatched&&p.youthAction==='practice'&&p.job&&r.before.skill<2?['mentor']:[])
+  ];
+}
+function pendingAgreements(r){
+  return eligibleAgreements(r).filter(key=>!state.declinedAgreements[key]&&!approved(state.agreements[key]));
+}
+function unlockedChoices(field,r,pending){
+  if(state.step==='intent')return null;
+  const p=r.plan;
+  const current=[p[field]];
+  const feeDeclined=p.motherAction==='private'&&p.maleFee>0&&state.declinedAgreements.fee;
+  const careFailed=(r.mode!==p.motherAction||feeDeclined)&&!(p.motherAction==='family'&&pending.includes('family'))&&!pending.includes('fee');
+  const familyFailed=(p.maleAction==='care'||p.maleAction==='cook')&&!r.family&&!r.cookingShared&&!pending.includes('family');
+  if(field==='motherFallback'&&careFailed&&!r.splitHousework)return null;
+  if(field==='maleFallback'&&familyFailed)return null;
+  if(field==='maleFee'&&state.declinedAgreements.fee&&p.motherAction==='private')return [...new Set([...current,0])];
+  if(field==='motherAction'&&careFailed&&r.splitHousework)return [...new Set([...current,'home','private'])];
+  const missingStaff=r.splitHousework&&p.publicCare&&p.careStaff==='youth'&&!r.nurseryStaff;
+  if(field==='careStaff'&&missingStaff)return null;
+  if(field==='publicCare'&&missingStaff)return [true,false];
+  if(!r.valid&&!pending.length){
+    if(field==='evaluation'&&r.evaluationCost>0)return [...new Set([...current,0,...(r.evaluationCost>1?[1]:[])])];
+    if(field==='job'&&r.jobCost>0)return [true,false];
+    if(field==='publicCare'&&r.publicCareCost>0)return [true,false];
+  }
+  return current;
+}
+function actionForms(r,pending){
+  const select=(field,label)=>{
+    const allowed=unlockedChoices(field,r,pending);
+    const fixed=allowed?.length===1;
+    return `<label class="choice-label">${label}<select data-plan="${field}" aria-label="${FIELD_LABELS[field]}" ${fixed?'disabled':''}>${optionsFor(field,allowed)}</select></label>`;
+  };
   const first=r.round===0;
   const jobHelp=r.round===2?'第三组外派后，已有2点经验且第四组安排岗位，才能独立补上重活。条件不够就接受普通派工。第三组留队时仍可安排学习实践。也可报名半天托儿，获安排后只做半天普通农活。'
     :r.before.skill===0?'要试做重活，须第四组留出岗位，第一、三组谈成带工。实际试做＋1经验。条件未满足就做全天普通劳动。'
     :'有试工经验，可以直接向第四组申请派工。第三组可以自愿带工。实际参加＋1经验，无岗位支持时做全天普通劳动。';
   return `<div class="action-grid">
 <section class="action-card" style="--role:${ROLES[0].color}">${roleHeader(0,'第一组 · 自主行动',ROLES[0].name)}${select('youthAction','本轮劳动安排')}<p class="help">${jobHelp}</p></section>
-<section class="action-card" style="--role:${ROLES[1].color}">${roleHeader(1,'第二组 · 照料与备用',ROLES[1].name)}${select('motherAction',r.splitHousework?'照料由谁负责':'家庭事务与出工')}${r.splitHousework?select('cooking','做饭备柴由谁负责'):select('motherFallback','条件未满足时执行')}<p class="help">${first?'本村尚无合作社托儿点，可自行照料、请邻里代看或协商家庭分担。':r.round===1?'第四组开办后即可使用农忙托儿点。托儿点没办成时执行备用行动。':'做饭备柴、照料各占半天。每项未安排妥当，就由第二组接手，占用她半天出工时间。'} 邻里照料合计4分。</p></section>
+<section class="action-card" style="--role:${ROLES[1].color}">${roleHeader(1,'第二组 · 照料与备用',ROLES[1].name)}${select('motherAction',r.splitHousework?'照料由谁负责':'家庭事务与出工')}${r.splitHousework?select('cooking','做饭备柴由谁负责'):select('motherFallback','条件未满足时执行')}${r.plan.motherAction==='private'?select('maleFee','拟议的照料费用分担'):''}<p class="help">${first?'本村尚无合作社托儿点，可自行照料、请邻里代看或协商家庭分担。':r.round===1?'第四组开办后即可使用农忙托儿点。托儿点没办成时执行备用行动。':'做饭备柴、照料各占半天。每项未安排妥当，就由第二组接手，占用她半天出工时间。'} 邻里照料合计4分。</p></section>
 <section class="action-card" style="--role:${ROLES[2].color}">${roleHeader(2,'第三组 · 出工与责任',ROLES[2].name)}${select('maleAction','本轮劳动安排')}${select('maleFallback','家庭分担未成立时执行')}<p class="help">${r.adjusted?'外派全天记12示范工分，本队出工为0，也无法接手做饭、照料或在队里带工。留队时可协商接手做饭或照料其中一项。':'岗位开放后，只接重活会减少半日出工。家庭分担包括半日家庭事务及一项晚间家务。'}</p></section>
 <section class="action-card" style="--role:${ROLES[3].color}">${roleHeader(3,'第四组 · 组织投入',ROLES[3].name)}${select('evaluation','评工落实')}${select('job','岗位支持')}${first?'':select('publicCare',r.round===1?'农忙托儿点':'开办或维持小托儿组')}${r.splitHousework&&r.plan.publicCare?select('careStaff','由谁照料半天'):''}<p class="help">${first?'第一轮安排评工与带教试工。合作社从第二轮起可以办托儿点。':r.adjusted?'可调本队另一名社员，或安排报名的第一组。落实人手后才能开办，实际使用时给照料者记4分。':'连续落实两组统一评工、连续开办照料可降低成本。'}已组织的支持即使闲置也扣资源。</p></section>
 </div>`;}
 function budget(r){return `<div class="budget ${r.valid?'':'error'}" ${r.valid?'':'role="alert"'}><div><span>前轮余额 ${r.before.reserve}</span><span>本轮新增 ${GRANTS[r.round]}</span><b>可用 ${r.available}点</b></div><div><span>评工 ${r.evaluationCost}</span><span>岗位 ${r.jobCost}${r.mentor?'（带工减1）':''}</span><span>照料 ${r.publicCareCost}</span><b>投入 ${r.spent} · ${state.step==='receipt'?'余额':'预计余'} ${r.remaining}</b></div>${r.valid?'':`<p>超出预算${-r.remaining}点。第四组须调整投入，或落实符合条件的带工；预算平衡后才能结算。</p>`}</div>`;}
-function agreements(r){
-  const relevant = {
-    family:!r.dispatched&&(r.plan.motherAction==='family'||r.plan.maleAction==='care'||r.splitHousework&&(r.plan.cooking==='partner'||r.plan.maleAction==='cook')),
-    fee:r.plan.motherAction==='private',
-    mentor:!r.dispatched&&r.plan.youthAction==='practice'&&r.plan.job&&r.before.skill<2
-  };
-  const active = {family:r.family||r.cookingShared,fee:r.feeAgreement,mentor:r.mentor};
+function agreements(r,pending){
+
   const familyTask=r.plan.maleAction==='cook'||(r.plan.maleAction!=='care'&&r.plan.cooking==='partner'&&r.plan.motherAction!=='family')?'做饭备柴':'照料';
-  const entries = Object.entries(AGREEMENTS).filter(([key])=>relevant[key]);
-  if(!entries.length)return '<p class="notice compact">本轮行动无需签订协议。请核对下方的实际行动。</p>';
+  const entries=eligibleAgreements(r).map(key=>[key,AGREEMENTS[key]]);
+  if(!entries.length)return '<p class="notice compact">当前安排没有待双方确认的协议。请核对下方的实际行动和备用安排。</p>';
   return `<div class="agreement-grid">${entries.map(([key,a])=>{
-    const selfPay=key==='fee'&&r.plan.maleFee===0;
+    const open=pending.includes(key);
     const signatures=state.agreements[key];
-    const status=selfPay?'第二组自付4分，可自行安排。':active[key]?'本轮将实际执行。':approved(signatures)?'双方已同意，当前行动条件未匹配。':'尚未获得双方同意。';
-    const signers=selfPay?'':`<div class="signatures">${a.signers.map((group,signer)=>button(`第${group+1}组${signatures[signer]?'已同意 ✓':'同意协议'}`,'agreement','',`data-kind="${key}" data-signer="${signer}" aria-pressed="${signatures[signer]}"`)).join('')}</div>`;
+    const status=state.declinedAgreements[key]?'协议未达成。请核对受影响组的备用安排。':open?'等待双方确认。':'双方已同意，本轮按协议执行。';
+    const signers=open?`<div class="signatures">${a.signers.map((group,signer)=>button(`第${group+1}组${signatures[signer]?'已同意 ✓':'同意协议'}`,'agreement','',`data-kind="${key}" data-signer="${signer}" aria-pressed="${signatures[signer]}"`)).join('')}${button('标记未谈成','decline-agreement','',`data-kind="${key}"`)}</div>`:'';
     const splitFamily=key==='family'&&r.splitHousework;
-    return `<section class="agreement"><h3>${splitFamily?`${familyTask}分担协议`:a.name}</h3><p>${splitFamily?`第三组留队时最多接手一项。两组选择同一项并都同意后，第三组接手半天${familyTask}。`:a.text}${key==='mentor'&&r.round<2&&r.before.skill===0?' 首次试做须双方同意。':''}</p>${key==='fee'?select('maleFee','提议的费用分担'):''}${signers}<p class="agreement-status">${status}</p></section>`;
+    return `<section class="agreement"><h3>${splitFamily?`${familyTask}分担协议`:a.name}</h3><p>${splitFamily?`第三组留队时最多接手一项。两组选择同一项并都同意后，第三组接手半天${familyTask}。`:a.text}${key==='mentor'&&r.round<2&&r.before.skill===0?' 首次试做须双方同意。':''}</p>${key==='fee'?`<p><strong>${choiceTitle('maleFee',r.plan.maleFee)}</strong></p>`:''}${signers}<p class="agreement-status">${status}</p></section>`;
   }).join('')}</div>`;
 }
 function actualCards(r){const proposed=[r.plan.youthAction==='practice'?youthPracticeTitle(r.before):choiceTitle('youthAction',r.plan.youthAction),r.splitHousework?`${householdCareOptions[r.plan.motherAction]}。${choiceTitle('cooking',r.plan.cooking)}。`:choiceTitle('motherAction',r.plan.motherAction),r.splitHousework&&r.plan.maleAction==='care'?'留队，半天重活、半天照料':choiceTitle('maleAction',r.plan.maleAction),r.round===0?'评工与试工岗位投入':'评工、岗位、照料三项组织投入'];return `<div class="execution-grid">${ROLES.map((role,i)=>`<article class="execution-card" style="--role:${role.color}"><div class="role-caption">${roleIcon(i,'small')}<div class="eyebrow">第${i+1}组 · ${role.name}</div></div><p class="requested">意向：${proposed[i]}</p><h3>${r.actual[i].title}</h3><p>${r.actual[i].text}</p>${r.reasons[i].length?`<div class="adjustment">${r.reasons[i].map(s=>`<p>${s}</p>`).join('')}</div>`:''}</article>`).join('')}</div>`;}
@@ -367,11 +402,11 @@ function receiptSummary(r){
 }
 function roundScreen(){const i=roundIndex(),e=ERAS[i],r=currentResult();
   if(state.step==='receipt')return `${head(`第${i+1}轮 · ${e.years} · 已结算`,'这一阶段，谁获得了什么，又承担了什么？','')}${receiptSummary(r)}${budget(r)}${ledger(r)}<div class="actions split">${button('返回本轮修改','revise')}${i<2?button(`进入第${i+2}轮 · ${ERAS[i+1].years} →`,'next','primary'):button('揭晓长期结局 →','ending','primary')}</div>`;
-  const negotiating=state.step==='negotiate';
+  const negotiating=state.step==='negotiate',pending=negotiating?pendingAgreements(r):[];
   return `${head(`第${i+1}轮 · ${e.years} · ${e.title}`,e.theme,e.context)}<div class="substeps">${pill('1 独立登记',negotiating?'':'selected')}${pill('2 协商与结算',negotiating?'selected':'')}<span>三轮各结算一次 · 本轮新增${GRANTS[i]}点资源</span></div>${careerStats(r.before)}${i>0?'<div class="notice compact">行动暂沿用前轮，三项协议须本轮重新确认。已有经验与资源保留，任何人都可以调整自己的行动。</div>':''}
-  ${actionForms(r)}${negotiating?agreements(r):'<div class="notice compact">各组先独立登记，再公布意向进入协商。协议尚未确认时，试算按各自备用行动显示。</div>'}${budget(r)}
+  ${negotiating?'<div class="notice compact"><strong>四组选择已锁定。</strong> 双方同意后执行协议。有一方拒绝时，由主持人标记未谈成。页面只开放受影响的调整项。</div>':'<div class="notice compact">各组先独立登记行动和适用的备用方案。公布后锁定选择。</div>'}${actionForms(r,pending)}${negotiating?agreements(r,pending):''}${budget(r)}
   ${negotiating?`<label class="note-label">本轮协商记录（可选）<textarea data-note="${i}" aria-label="本轮协商记录" placeholder="记录承诺、分歧或选择理由">${esc(state.notes[i])}</textarea></label><div class="section-label"><h3>核对四组实际行动</h3></div><p class="help">协议由涉及的组确认。协议未达成时，按下方显示的实际行动执行。主持人核对后结算。</p>`:''}${actualCards(r)}
-  <div class="actions split">${button('查看本轮四组试算账','ledger')}<div>${negotiating?button('返回独立登记','back-intent'):''} ${negotiating?button('结算本轮 →','settle','primary',r.valid?'':'disabled'):button('公布意向，进入协商 →','negotiate','primary')}</div></div>`;
+  <div class="actions split">${button('查看本轮四组试算账','ledger')}<div>${pending.length?'<span>请先确认协议或标记未谈成</span>':''} ${negotiating?button('结算本轮 →','settle','primary',r.valid&&!pending.length?'':'disabled'):button('公布并锁定选择 →','negotiate','primary')}</div></div>`;
 }
 function roleSummary(c,i){const facts=careerFacts(c);if(i===0)return `累计工分${c.points[0]}，岗位经验${c.skill}点；采用统一计价${c.youthEqualCount}轮。累计负担${c.burdens[0]}：${burdenLabel(c.burdens[0])}。`;
   if(i===1)return `累计净得${c.points[1]}，全天出工${c.motherFull}轮；夫妻合计${c.points[1]+c.points[2]}。累计负担${c.burdens[1]}：${burdenLabel(c.burdens[1])}。`;
@@ -411,6 +446,7 @@ function endingComparison(results,main){
 function endingScreen(){const {career:c,results}=data(),cat=endingCatalog(c),main=cat.main.find(x=>x.matched);return `${head('到1962年前后 · 长期结局','三轮经历，留下了怎样的变化？','主结局、四组处境与负担记录共同组成结果。最后一轮的安排不会删除前期经历。')}<div class="actions">${button('查看全部结局与达成要求','all-endings','primary')}${button('查看三轮账目与协商记录','history')}</div><section class="result-hero"><div class="eyebrow">合作社主结局</div><h2>${main.title}</h2><p>${main.text}</p>${results[2].adjusted?`<p class="adjustment-outcome">${adjustmentSummary(results[2])}</p>`:''}<div class="pills">${historyTags(c).map(t=>pill(t)).join('')}</div></section>${endingComparison(results,main)}${careerStats(c)}<div class="role-results">${ROLES.map((r,i)=>`<article class="role-result" style="--role:${r.color}">${roleHeader(i,`第${i+1}组 · ${r.name}`,cat.roles[i].find(x=>x.matched).title)}<p>${roleSummary(c,i)}</p></article>`).join('')}</div><div class="notice">第1、2组下工后的家庭劳动仍有记录；集体照料也由其他劳动者承担。制度配套形成，不等于性别平等已经实现。</div><div class="actions split">${button('重选第三轮并比较结果','revise-final')}${button('进入1970年代回望 →','discussion','primary')}</div>`;}
 function discussionScreen(){return `${head('1970年代回望 · 课堂讨论','制度的理想，怎样成为不同人的现实？','回望是根据本局经历作出的有条件推演，不宣称1962年后的历史会按游戏安排固定发展。')}<p class="big-question">机会和收入增加以后，<br>家庭中的劳动分担也改变了吗？</p><div class="discussion-grid"><article><span>01</span><h3>哪些改善有了延续？</h3><p>对照三轮记录，看看评工、岗位和照料的支持如何建立、停止或恢复。</p></article><article><span>02</span><h3>配套依靠谁的劳动？</h3><p>看看家庭事务、照料费用和无工分指导由谁承担。个人所得与家庭合计是否一致变化？</p></article><article><span>03</span><h3>如果这些安排继续</h3><p>妇女增加的出工和收入，能否同时带来长期家庭负担的改变？还缺少什么条件？</p></article></div><div class="actions">${button('返回长期结局','ending','primary')}${button('查看全部结局与达成要求','all-endings')}${button('查看三轮账目','history')}</div>`;}
 function render(){
+  state.declinedAgreements??={};
   if(state.screen==='round'&&state.step!=='receipt'&&state.history.length===2){
     state.plan.cooking??='self';
     state.plan.careStaff??='local';
@@ -430,7 +466,7 @@ function render(){
 function showDialog(title,html){document.getElementById('dialog-title').textContent=title;document.getElementById('dialog-body').innerHTML=html;if(!dialog.open)dialog.showModal();}
 function allEndingsHtml(){const c=data().career,cat=endingCatalog(c),roleIndex=Number(endingCategory.replace('role','')),rows=endingCategory==='main'?cat.main:cat.roles[roleIndex];return `<p>每项下列条件须同时满足；按完整三轮正式结果核对。本轮预算均须合法，协议须实际兑现。勾选为本局已满足条件。</p><div class="ending-tabs" aria-label="选择结局类别">${[['main','八类主结局'],...ROLES.map((r,i)=>[`role${i}`,`第${i+1}组`])].map(([key,label])=>button(label,'ending-category','',`data-category="${key}" aria-pressed="${endingCategory===key}"`)).join('')}</div><div class="notice compact">两组统一评工${careerFacts(c).evaluationCount}轮；第二组全天出工${c.motherFull}轮、累计净得${c.points[1]}分；经验${c.skill}点；资源余${c.reserve}点。</div><h3>${endingCategory==='main'?'八类合作社主结局':ROLES[roleIndex].name+' · 角色结局'}</h3>${rows.map(e=>`<article class="ending-entry ${e.matched?'current-ending':''}"><div class="ending-title"><h3>${e.title}</h3>${e.matched?pill('本局结局'):''}</div>${e.text?`<p>${e.text}</p>`:''}<ul class="requirements">${e.requirements.map(r=>`<li class="${r.met?'met':''}"><span>${r.met?'✓ 已满足':'○ 未满足'}</span>${r.text}</li>`).join('')}</ul></article>`).join('')}<p class="help">角色结局还附加负担标签：0—3点较低，4—6点持续存在，7点及以上为较重负担。18分是课堂观察线，不是历史贫困线。</p>`;}
 function historyHtml(){const {results}=data();return results.map((r,i)=>`<details ${i===results.length-1?'open':''}><summary>第${i+1}轮 · ${ERAS[i].years} · ${ERAS[i].title}</summary>${budget(r)}${ledger(r)}<h4>协商记录</h4><p>${esc(state.notes[i]||'未填写')}</p><h4>实际兑现</h4>${r.adjusted?`<p>${adjustmentSummary(r)}</p>`:''}<p>家庭分担：${r.family||r.cookingShared?'是':'否'}；男方照料付费：${r.maleFee}分；带工：${r.mentor?'是':'否'}；正式岗位：${r.formal?'是':'否'}。</p>${r.unused.map(t=>`<p>${t}</p>`).join('')}</details>`).join('');}
-function rulesHtml(){return `<h3>三阶段模拟怎样进行</h3><p>四组分别选择行动，公开意向后由涉及协议的组协商确认。主持人核对四组实际行动后统一结算，每个阶段正式结算一次。前三组累计工分与负担，第一组积累经验，第四组资源余额保留。没有共同方案表决、倒计时或超时提交。</p><p>三轮依次在1953—1955、1956—1957、1961—1962各选一次代表性农忙。1958年开始的公社化作为第三轮的背景。每轮只模拟一次代表性农忙安排，工分和资源采用课堂设定。三轮结束后回望1970年代。前两轮用一项家庭事务代表照料及必要家务。第三轮分开安排做饭备柴和照料。</p>
+function rulesHtml(){return `<h3>三阶段模拟怎样进行</h3><p>四组独立登记行动和适用的备用方案，选择公布后锁定。只有涉及协议的组需要确认。协议未达成时执行备用，只开放受影响的选择。预算超额时第四组可削减已选投入。主持人核对后每阶段结算一次。前三组累计工分与负担，第一组积累经验，第四组资源余额保留。没有共同方案表决、倒计时或超时提交。</p><p>三轮依次在1953—1955、1956—1957、1961—1962各选一次代表性农忙。1958年开始的公社化作为第三轮的背景。每轮只模拟一次代表性农忙安排，工分和资源采用课堂设定。三轮结束后回望1970年代。前两轮用一项家庭事务代表照料及必要家务。第三轮分开安排做饭备柴和照料。</p>
 <h3>前两轮岗位与照料</h3><p>第一轮须第四组留出试工位，且第一、三组达成带工协议，第一组才能实际试做重活。本村从第二轮开始可以开办农忙托儿点。第二轮，有试工经验的第一组可以独立申请派工，仍须第四组安排岗位。还没有经验的第一组须有带工才能试做。</p><h3>第三轮食堂停办后的排班</h3><p>本村食堂停办，夫妻须分别安排做饭备柴和照料，两项各占半天。第三组可以留队出工半天、接手其中一项，经夫妻确认后执行。哪项安排没落实，就由第二组接手，占她半天出工时间。照料费仍为4分，照料费用从个人工分中扣除。</p><h3>第三轮外派、补位与托儿</h3><p>第三组可外派全天，示范账记12分，本队田间出工为0。当轮无法接手家庭事务或带工，仍可分担邻里照料费。第一组有2点经验、选择重活且第四组落实岗位时，可补上空出的半日重活。当第三组留队时，沿用原有学习和派工规则。</p><p>第四组可安排另一名本队社员或报名的第一组照料半天。这半天从田间出工转为照料，第一组如果获安排，另半天做普通农活。第一组未报名时，指派她的方案不消耗托儿资源，也无法提供托儿。小托儿组延续上轮安排需2点，新办需3点。第二组实际使用时另给照料人员记4分。外派工分和本队田间时间分列。</p><h3>每轮资源与组织成本</h3><table><tr><th>轮次</th><th>可用资源</th></tr><tr><td>第一轮</td><td>6点</td></tr><tr><td>第二轮</td><td>前轮余额＋4点</td></tr><tr><td>第三轮</td><td>前轮余额＋3点</td></tr></table><ul><li>原差别计价0点；仅第一组统一1点；两组统一首次或恢复2点，连续维持1点。</li><li>岗位学习2点，实际带工减为1点；本轮开始经验已有2点，提供正式岗位1点。</li><li>集体照料首次或恢复3点，连续开办2点。开办后无人使用也扣成本。</li><li>不能借下一轮资源，工分不能换资源。预算超额时第四组调整投入后再结算。</li></ul>
 <h3>记工与岗位冲突</h3><table><tr><th>半日劳动</th><th>女社员原计价</th><th>统一计价</th><th>男社员</th></tr><tr><td>普通劳动</td><td>3</td><td>5</td><td>5</td></tr><tr><td>重活</td><td>4</td><td>6</td><td>6</td></tr></table><p>每人最多两个半日田间劳动。共两个半日重活岗位，第一组获得半日重活后，男社员接受全天派工记11分，只接剩余重活则出工半天记6分。男社员家庭分担时只做半日重活记6分。第一组无岗位支持则执行全天普通劳动；休整行动只做半天普通劳动。</p>
 <h3>三项协议与备用</h3><ul><li>家庭分担需第二组选择家庭分担、第三组选择接手且双方同意。前两轮第三组承担半日家庭事务和一项晚间家务。第三轮改为半天做饭或半天照料，两项只能接手一项。</li><li>邻里照料合计4分，男方可承担0—4分。男方付费须双方确认数额；改数额清除费用签名。女方全部自付可自行选择。</li><li>带工需第一组经验不足2点，第四组提供支持，第一组实际实践，第一、三组均同意。组织成本减1，学习负担减1，指导者负担加1，不额外记工。</li><li>每轮重新签约。前两轮第二组条件不匹配时，按其备用自己处理家庭事务，或自付4分请邻里照料。第三轮未落实的做饭或照料由第二组接回。第三组的家庭分担未执行时，按其备用接受派工或只接重活。</li><li>双方已签但行动不匹配，不扣费用、不执行额外责任。各组自主选择行动，不能以多数票强迫其他组承担责任。</li></ul>
@@ -439,7 +475,27 @@ function rulesHtml(){return `<h3>三阶段模拟怎样进行</h3><p>四组分别
 <h3>长期结局</h3><p>八类主结局依次判断：①从未覆盖两组；②曾覆盖后回退；③第三轮覆盖但主要照料者最多一轮全天出工；④全天出工增加但个人累计净得不足18分；⑤所得改善而评工或岗位未稳；⑥机会回报改善而照料缺少连续支持；⑦支持持续、本轮家庭分担；⑧支持持续、本轮集体服务。</p><p>较后四类须第二组至少两轮全天出工且净得至少18分。第⑥—⑧类还须两组统一评工至少两轮并延续至第三轮、第一组第三轮取得正式岗位。连续照料支持指第二、三轮都实际采用家庭分担或集体照料，两轮方式可以不同。</p><p>结局页可查看八类主结局与四组角色结局的全部条件，逐项标记是否满足。18分是课堂观察线，不是历史贫困线。结局保留全程记录，改善不会抹去前期代价。</p>
 <h3>课堂安排</h3><p>介绍约2分钟，三轮各约4分钟，结局约3分钟，回望讨论约3分钟，共约20分钟。主持人自主把握，不设置任何计时或自动提交。</p>`;}
 function resetDialog(){showDialog('重新开始',`<p>重新开始将清空本机这局模拟的三轮记录、协议与累计账目。</p><div class="actions">${button('取消','close')}${button('确认重新开始','reset-confirm','danger')}</div>`);}
-document.addEventListener('change',event=>{const field=event.target.dataset.plan;if(!field)return;const option=CHOICES[field].find(([v])=>String(v)===event.target.value);if(!option)return;state.plan[field]=option[0];if(state.history.length===2&&['cooking','motherAction','maleAction'].includes(field))state.agreements.family=[false,false];if(field==='maleFee')state.agreements.fee=[false,false];render();});
+document.addEventListener('change',event=>{
+  const field=event.target.dataset.plan;
+  if(!field||event.target.disabled)return;
+  const option=CHOICES[field].find(([v])=>String(v)===event.target.value);
+  if(!option)return;
+  const negotiating=state.step==='negotiate';
+  if(negotiating){
+    const r=currentResult();
+    const allowed=unlockedChoices(field,r,pendingAgreements(r));
+    if(allowed&&!allowed.includes(option[0])){render();return;}
+    if(field==='motherAction'&&option[0]==='private'){
+      state.plan.maleFee=0;
+      state.agreements.fee=[false,false];
+    }
+  }else if(['cooking','motherAction','maleAction'].includes(field)){
+    state.agreements.family=[false,false];
+  }
+  state.plan[field]=option[0];
+  if(field==='maleFee')state.agreements.fee=[false,false];
+  render();
+});
 document.addEventListener('input',event=>{if(event.target.dataset.note!==undefined){state.notes[Number(event.target.dataset.note)]=event.target.value;save();}});
 document.addEventListener('click',async event=>{const el=event.target.closest('[data-action]');if(!el||el.disabled)return;const action=el.dataset.action;let rerender=false;
   if(action==='start'){state.screen='round';state.step='intent';rerender=true;}
@@ -447,12 +503,22 @@ document.addEventListener('click',async event=>{const el=event.target.closest('[
   if(action==='ledger'){const r=currentResult();if(r)showDialog('本轮四组账目',ledger(r,state.step!=='receipt'&&state.screen==='round'));else showDialog('开局账目','<p>三组累计工分、负担与经验均从0开始。第一轮可用组织资源6点。</p>');}
   if(action==='history')showDialog('三轮账目与协商记录',historyHtml());
   if(action==='close')dialog.close();
-  if(action==='negotiate'){state.step='negotiate';rerender=true;}
-  if(action==='back-intent'){state.step='intent';rerender=true;}
-  if(action==='agreement'){const k=el.dataset.kind,i=Number(el.dataset.signer);state.agreements[k][i]=!state.agreements[k][i];rerender=true;}
-  if(action==='settle'&&state.screen==='round'&&state.step==='negotiate'&&currentResult().valid){state.history.push({plan:structuredClone(state.plan),agreements:structuredClone(state.agreements),stageRules:true,adjustmentRules:true,mealRules:true});state.step='receipt';rerender=true;}
-  if(action==='next'&&state.step==='receipt'&&state.history.length<3){state.step='intent';state.agreements=emptyAgreements();rerender=true;}
-  if((action==='revise'&&state.step==='receipt')||(action==='revise-final'&&state.history.length===3)){const record=state.history.pop();if(action==='revise-final')state.originalThirdRound??=record;state.plan=structuredClone(record.plan);state.agreements=structuredClone(record.agreements);state.screen='round';state.step='negotiate';rerender=true;}
+  if(action==='negotiate'&&state.step==='intent'){state.step='negotiate';rerender=true;}
+  if((action==='agreement'||action==='decline-agreement')&&state.step==='negotiate'){
+    const key=el.dataset.kind;
+    if(!pendingAgreements(currentResult()).includes(key))return;
+    if(action==='decline-agreement'){
+      state.declinedAgreements[key]=true;
+      state.agreements[key]=[false,false];
+    }else{
+      const signer=Number(el.dataset.signer);
+      state.agreements[key][signer]=!state.agreements[key][signer];
+    }
+    rerender=true;
+  }
+  if(action==='settle'&&state.screen==='round'&&state.step==='negotiate'&&currentResult().valid&&!pendingAgreements(currentResult()).length){state.history.push({plan:structuredClone(state.plan),agreements:structuredClone(state.agreements),stageRules:true,adjustmentRules:true,mealRules:true});state.step='receipt';rerender=true;}
+  if(action==='next'&&state.step==='receipt'&&state.history.length<3){state.step='intent';state.agreements=emptyAgreements();state.declinedAgreements={};rerender=true;}
+  if((action==='revise'&&state.step==='receipt')||(action==='revise-final'&&state.history.length===3)){const record=state.history.pop();if(action==='revise-final')state.originalThirdRound??=record;state.plan=structuredClone(record.plan);state.agreements=emptyAgreements();state.declinedAgreements={};state.screen='round';state.step='intent';rerender=true;}
   if(action==='ending'&&state.history.length===3){state.screen='ending';rerender=true;}
   if(action==='discussion'&&state.history.length===3){state.screen='discussion';rerender=true;}
   if(action==='all-endings'&&state.history.length===3){endingCategory='main';showDialog('全部结局与达成要求',allEndingsHtml());}
@@ -460,7 +526,7 @@ document.addEventListener('click',async event=>{const el=event.target.closest('[
   if(action==='reset')resetDialog();
   if(action==='reset-confirm'){state=freshState();dialog.close();rerender=true;}
   if(action==='fullscreen'){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{showDialog('全屏投影','<p>浏览器暂未允许网页全屏。可使用浏览器的全屏显示功能进行课堂投影。</p>');}}
-  if(rerender){render();if(action!=='agreement')window.scrollTo({top:0,behavior:'instant'});}
+  if(rerender){render();if(action!=='agreement'&&action!=='decline-agreement')window.scrollTo({top:0,behavior:'instant'});}
 });
 render();
 </script></body></html>
