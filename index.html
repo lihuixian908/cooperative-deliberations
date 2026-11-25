@@ -26,6 +26,24 @@
   .ending-comparison th,.ending-comparison td{padding:7px}
 }
 
+.result-hero[data-tone=good],.ending-category[data-tone=good]{--ending-tone:#315f50}
+.result-hero[data-tone=bad],.ending-category[data-tone=bad]{--ending-tone:#873d3d}
+.result-hero[data-tone=ordinary],.ending-category[data-tone=ordinary]{--ending-tone:#805521}
+.result-hero[data-tone=open],.ending-category[data-tone=open]{--ending-tone:#3d5b72}
+.result-hero[data-tone]{border-left-color:var(--ending-tone)}
+.result-hero[data-tone]>.eyebrow,.ending-category>h3{color:var(--ending-tone)}
+.ending-story{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:28px;margin:18px 0}
+.ending-story>div{padding:12px 0;border-top:1px solid var(--line)}
+.ending-story>div:first-child,.ending-story>.ending-prompt{grid-column:1/-1}
+.ending-story h3{font-size:18px;margin-bottom:7px}
+.ending-story p{margin:0 0 7px}
+.ending-story .ending-source,.ending-source{font-size:14px;color:var(--muted);margin:6px 0 0}
+.ending-story .ending-prompt{padding:12px 16px;background:#f1eee2}
+.ending-category{margin-top:25px}
+.ending-reading summary{cursor:pointer;color:var(--green)}
+.ending-reading p{margin:8px 0 0}
+@media(max-width:720px){.ending-story{grid-template-columns:1fr}}
+
 @media print{.top-actions,.actions,.substeps,button,.footer{display:none!important}body{background:white}.shell{max-width:none;padding:0}.role-result,.result-hero{break-inside:avoid}.ledger-table{min-width:0;font-size:11px}.ledger-table td>b{font-size:17px}.metrics{grid-template-columns:repeat(4,1fr)}}
 </style></head>
 <body><header class="topbar"><div class="brand">合作社的三场商议<small>集体化三阶段模拟 · 1953—1962</small></div><div class="top-actions"><button data-action="rules">完整规则</button><button data-action="ledger">本轮四组账目</button><button data-action="history" id="history-button" hidden>历轮记录</button><button data-action="fullscreen">全屏投影</button><button data-action="reset">重新开始</button></div></header><main class="shell"><div class="status-line"><span id="save-status">单机主持 · 可离线使用</span><div class="resource" id="resource"></div></div><div id="timeline"></div><div id="app"></div><footer class="footer"><span>虚构基层场景 · 据导修材料设计 · 数值与机制为课堂设定</span><span>每轮模拟一次农忙安排 · 工分为三轮模拟结算合计</span></footer></main><dialog id="dialog" aria-labelledby="dialog-title"><header class="dialog-head"><h2 id="dialog-title"></h2><button data-action="close" aria-label="关闭对话框">关闭</button></header><div class="dialog-body" id="dialog-body"></div></dialog><noscript><p>请启用浏览器的 JavaScript 后运行游戏。</p></noscript><script id="game-engine">'use strict';
@@ -432,7 +450,7 @@ function endingComparison(results,main){
   const revised=results[2];
   const a=original.after,b=revised.after;
   const rows=[
-    ['合作社主结局',endingCatalog(a).main.find(e=>e.matched).title,main.title],
+    ['合作社主结局',endingLabel(endingCatalog(a).main.find(e=>e.matched)),endingLabel(main)],
     ['第三轮外派、补位与托儿',original.adjusted?adjustmentSummary(original):'按本局原先的派工安排结算',revised.adjusted?adjustmentSummary(revised):'按本局原先的派工安排结算'],
     ['第三轮家庭安排',original.actual[1].title,revised.actual[1].title],
     ['第一组',`${a.points[0]}分 · 经验${a.skill}点 · 负担${a.burdens[0]}点`,`${b.points[0]}分 · 经验${b.skill}点 · 负担${b.burdens[0]}点`],
@@ -443,7 +461,92 @@ function endingComparison(results,main){
   ];
   return `<section class="ending-comparison" aria-labelledby="comparison-title"><h3 id="comparison-title">第三轮重选前后</h3><p>两种结果都从相同的前两轮出发。工分、经验和负担按三轮累计。</p><table><thead><tr><th scope="col">比较项目</th><th scope="col">原结果</th><th scope="col">重选结果</th></tr></thead><tbody>${rows.map(([label,before,after])=>`<tr><th scope="row">${label}</th><td>${before}</td><td class="${before!==after?'changed':''}">${after}</td></tr>`).join('')}</tbody></table></section>`;
 }
-function endingScreen(){const {career:c,results}=data(),cat=endingCatalog(c),main=cat.main.find(x=>x.matched);return `${head('到1962年前后 · 长期结局','三轮经历，留下了怎样的变化？','主结局、四组处境与负担记录共同组成结果。最后一轮的安排不会删除前期经历。')}<div class="actions">${button('查看全部结局与达成要求','all-endings','primary')}${button('查看三轮账目与协商记录','history')}</div><section class="result-hero"><div class="eyebrow">合作社主结局</div><h2>${main.title}</h2><p>${main.text}</p>${results[2].adjusted?`<p class="adjustment-outcome">${adjustmentSummary(results[2])}</p>`:''}<div class="pills">${historyTags(c).map(t=>pill(t)).join('')}</div></section>${endingComparison(results,main)}${careerStats(c)}<div class="role-results">${ROLES.map((r,i)=>`<article class="role-result" style="--role:${r.color}">${roleHeader(i,`第${i+1}组 · ${r.name}`,cat.roles[i].find(x=>x.matched).title)}<p>${roleSummary(c,i)}</p></article>`).join('')}</div><div class="notice">第1、2组下工后的家庭劳动仍有记录；集体照料也由其他劳动者承担。制度配套形成，不等于性别平等已经实现。</div><div class="actions split">${button('重选第三轮并比较结果','revise-final')}${button('进入1970年代回望 →','discussion','primary')}</div>`;}
+const ENDING_GROUPS=[
+  {label:'好结局',tone:'good',ids:[6,7]},
+  {label:'坏结局',tone:'bad',ids:[0,1]},
+  {label:'普通结局',tone:'ordinary',ids:[2,3]},
+  {label:'开放结局',tone:'open',ids:[4,5]}
+];
+const ENDING_READINGS=[
+  {
+    question:'妇女参加了集体劳动，她们的劳动怎样计酬？',
+    experience:'贺萧指出，各地评工有差异，但常见的记法是男社员一天10分、女社员6至8分。合作社提出同工同酬，实际评定的差距却很常见。',
+    source:'贺萧节选1「农民」，第207页',
+    evaluation:'组织妇女参加生产扩大了挣工分的机会。只要评工还按性别压低劳动价值，劳动机会与同等报酬之间的落差就会持续。',
+    discussion:'如果第四组只能先改一项，怎样改才会让第二组也从统一评工中受益？'
+  },{
+    question:'同工同酬在基层落实以后，为什么还会回退？',
+    experience:'马丽曾和男社员比插秧，甚至插得更快。有人提出按同样的标准给妇女记工，大队没有同意。她后来还主动报名做重活，曾在挑运任务中拿到与男社员相同的工分。',
+    source:'贺萧节选1「农民」，第211页',
+    evaluation:'妇女对待遇的争取可以带来实际改变。要让一次改善成为稳定的待遇，还需要基层把获认可的劳动表现持续记到账上。',
+    discussion:'第三轮哪一项决定让统一评工没能继续？前两轮的改善留下了什么？'
+  },{
+    question:'评工改善以后，家务分工怎样影响妇女能出多少工？',
+    experience:'贺萧记录了农村家庭继续在家做饭、清洗缝补和养育孩子的情况。男人有时也搬柴、看孩子或做饭，主要责任仍多由妇女承担。',
+    source:'贺萧节选2「母亲」，第273页',
+    evaluation:'统一计价改变了第二组做同样的活可以拿多少分。做饭与照料占去的时间，仍然影响她有多少机会拿到这些工分。',
+    discussion:'只看最后一轮，哪一项家务有可能重新分担？谁需要因此改变出工？'
+  },{
+    question:'出工时间增加后，妇女实际能留下多少报酬？',
+    experience:'郑秀花一天挣了6个工分，按每个孩子2分支付托儿费后，自己只剩2分。托儿帮助她参加田间劳动，费用也占去了她大部分工分。',
+    source:'贺萧节选2「母亲」，第288页',
+    evaluation:'评价妇女在集体里的处境，要把她能出多少工与实际能留下多少一起看。照料安排可以扩大参与，也可能使新增收入的大部分流向照料支出。',
+    discussion:'本局主要是计价、出工时间还是照料支出拉低了第二组的净得？账目里哪一项能说明？'
+  },{
+    question:'一次派工或评工上的改善，怎样才会变成稳定机会？',
+    experience:'何改珍回忆，她所在的青年队曾按男10分、女6分记工，县里的技术培训机会也总是给男性。队里的年轻妇女积极参加种植试验，并努力争取公平评价。',
+    source:'贺萧节选1「农民」，第211页',
+    evaluation:'妇女的劳动表现和经验需要在下一次派工与评工中得到承认。参加过实践、实际拿到岗位、按怎样的标准记工，是三件需要分别落实的事。',
+    discussion:'下一次农忙最该补哪一步，才能保住本局已经取得的收益？'
+  },{
+    question:'岗位和工分改善以后，照料为什么仍可能成为瓶颈？',
+    experience:'贺萧写到，大跃进期间办托儿被当作重要任务推进，但她所述的尝试很快遇到挫折。基层也有给年长妇女记工、让她们照料孩子的办法。',
+    source:'贺萧节选2「母亲」，第289–290页',
+    evaluation:'合作社落实派工和工分，可以让女社员的田间劳动受到承认。照料需要另外组织人手，安排只有一轮时，下一次农忙仍可能由家庭重新承担。',
+    discussion:'如果第三组下次外派或小托儿组缺人，哪一组的出工最先受影响？'
+  },{
+    question:'集体生产的机会能否得到家庭重新分工的支持？',
+    experience:'贺萧记录，有些男性会搬柴、看孩子，也会在妻子外出开会或接生时偶尔做饭。家务的主要责任仍多由妇女承担。',
+    source:'贺萧节选2「母亲」，第273页',
+    evaluation:'本局的家庭分担为第二组腾出了时间，也改变了第三组的劳动安排。要评价这种改善能否持续，还得看下一轮谁能继续腾出时间，以及做饭等其他劳动落在谁身上。',
+    discussion:'第三组接手了哪一项？如果他再外派，这项安排还能怎么维持？'
+  },{
+    question:'当照料进入生产队排班，照料者的劳动怎样被看见？',
+    experience:'贺萧记录，B村曾安排两位难以继续田间劳动的年长妇女看孩子，并给她们记工。部分地方也由母亲自己向照料者付工分。',
+    source:'贺萧节选2「母亲」，第288–289页',
+    evaluation:'小托儿组让集体生产的机会有了具体支持。评价这种安排，要同时看第二组能出多少工、照料者是否得到记工，以及生产队能否持续留出人手。',
+    discussion:'如果队里下一次缺人，谁会先少出工？怎样做才能让照料安排继续？'
+  }
+];
+function endingGroup(id){return ENDING_GROUPS.find(group=>group.ids.includes(id));}
+function endingLabel(ending){return `${endingGroup(ending.id).label} · ${ending.title}`;}
+function endingEvidence(id,c,results){
+  const last=results[2],second=results[1],f=careerFacts(c);
+  const fee=results.reduce((sum,r)=>sum+r.motherFee,0);
+  const careNames={home:'第二组自己照料',private:'亲邻代看',public:'集体照料',family:'家庭分担照料'};
+  const staff=last.youthStaff?'第一组':'本队照料社员';
+  switch(id){
+    case 0:return `三轮里，两组女社员同时按统一标准计工的次数为0。第一组有${c.youthEqualCount}轮按统一标准计工，累计${c.points[0]}分。第二组累计净得${c.points[1]}分。`;
+    case 1:return `前两轮有${f.evaluationCount}轮同时覆盖两组女社员。第三轮${last.plan.evaluation===1?'只覆盖第一组':'沿用原差别计价'}，第二组这一轮毛工分${last.motherGross}分、净得${last.motherNet}分。第一组此前和本轮共积累了${c.skill}点岗位经验。`;
+    case 2:return `第三轮两组女社员都按统一标准计工。第二组三轮中全天出工${c.motherFull}轮，第三轮田间出工${last.motherField}个半日，三轮累计净得${c.points[1]}分。`;
+    case 3:return `第二组有${c.motherFull}轮全天出工，三轮毛工分共${c.points[1]+fee}分，照料支出${fee}分，净得${c.points[1]}分，低于游戏的18分观察线。${fee===0?'本局第二组没有支付照料费，可以从每轮计价和出工时间里找原因。':''}`;
+    case 4:return `第二组有${c.motherFull}轮全天出工，净得${c.points[1]}分。两组统一评工共${f.evaluationCount}轮，第一组积累${c.skill}点经验，第三轮${last.formal?'取得':'未取得'}正式岗位。`;
+    case 5:return `两组统一评工实行了${f.evaluationCount}轮，第一组第三轮取得正式岗位，第二组累计净得${c.points[1]}分。第二轮是${careNames[second.mode]}，第三轮是${careNames[last.mode]}。家庭分担或集体照料没有在这两轮连续落实。`;
+    case 6:return `第二轮是${careNames[second.mode]}，第三轮由第三组接手半天照料。第二组第三轮出工${last.motherField}个半日、净得${last.motherNet}分，第三组出工${last.maleField}个半日、净得${last.maleNet}分。`;
+    case 7:return `第二轮是${careNames[second.mode]}，第三轮启用了小托儿组。${staff}负责照料并记${last.careCredit}分。第二组第三轮出工${last.motherField}个半日、净得${last.motherNet}分，生产队还余${c.reserve}点资源。`;
+  }
+}
+function endingStory(main,c,results){
+  const reading=ENDING_READINGS[main.id];
+  const last=results[2];
+  return `<div class="ending-story">
+    <div><h3>本局账目</h3><p>${endingEvidence(main.id,c,results)}</p>${last.adjusted?`<p class="adjustment-outcome">${last.splitHousework?houseworkSummary(last):adjustmentSummary(last)}</p>`:''}</div>
+    <div><h3>回到导修问题</h3><p><strong>${reading.question}</strong></p><p>${reading.evaluation}${main.id>=6&&c.reserve===0?'本局组织资源已经用完，下一轮要延续这些安排，还得重新筹措资源。':''}</p></div>
+    <div><h3>贺萧笔下的妇女处境</h3><p>${reading.experience}</p><p class="ending-source">${reading.source}</p></div>
+    <div class="ending-prompt"><h3>复盘问题</h3><p>${reading.discussion}</p></div>
+  </div>`;
+}
+function endingScreen(){const {career:c,results}=data(),cat=endingCatalog(c),main=cat.main.find(x=>x.matched),group=endingGroup(main.id);return `${head('到1962年前后 · 长期结局','三轮经历，留下了怎样的变化？','主结局、四组处境与负担记录共同组成结果。最后一轮的安排不会删除前期经历。')}<div class="actions">${button('查看全部结局与达成要求','all-endings','primary')}${button('查看三轮账目与协商记录','history')}</div><section class="result-hero" data-tone="${group.tone}"><div class="eyebrow">${group.label} · 合作社主结局</div><h2>${main.title}</h2>${endingStory(main,c,results)}<div class="pills">${historyTags(c).map(t=>pill(t)).join('')}</div></section>${endingComparison(results,main)}${careerStats(c)}<div class="role-results">${ROLES.map((r,i)=>`<article class="role-result" style="--role:${r.color}">${roleHeader(i,`第${i+1}组 · ${r.name}`,cat.roles[i].find(x=>x.matched).title)}<p>${roleSummary(c,i)}</p></article>`).join('')}</div><div class="notice">第1、2组下工后的家庭劳动仍有记录；集体照料也由其他劳动者承担。制度配套形成，不等于性别平等已经实现。</div><div class="actions split">${button('重选第三轮并比较结果','revise-final')}${button('进入1970年代回望 →','discussion','primary')}</div>`;}
 function discussionScreen(){return `${head('1970年代回望 · 课堂讨论','制度的理想，怎样成为不同人的现实？','回望是根据本局经历作出的有条件推演，不宣称1962年后的历史会按游戏安排固定发展。')}<p class="big-question">机会和收入增加以后，<br>家庭中的劳动分担也改变了吗？</p><div class="discussion-grid"><article><span>01</span><h3>哪些改善有了延续？</h3><p>对照三轮记录，看看评工、岗位和照料的支持如何建立、停止或恢复。</p></article><article><span>02</span><h3>配套依靠谁的劳动？</h3><p>看看家庭事务、照料费用和无工分指导由谁承担。个人所得与家庭合计是否一致变化？</p></article><article><span>03</span><h3>如果这些安排继续</h3><p>妇女增加的出工和收入，能否同时带来长期家庭负担的改变？还缺少什么条件？</p></article></div><div class="actions">${button('返回长期结局','ending','primary')}${button('查看全部结局与达成要求','all-endings')}${button('查看三轮账目','history')}</div>`;}
 function render(){
   state.declinedAgreements??={};
@@ -464,7 +567,11 @@ function render(){
   document.getElementById('history-button').hidden=state.history.length===0;save();
 }
 function showDialog(title,html){document.getElementById('dialog-title').textContent=title;document.getElementById('dialog-body').innerHTML=html;if(!dialog.open)dialog.showModal();}
-function allEndingsHtml(){const c=data().career,cat=endingCatalog(c),roleIndex=Number(endingCategory.replace('role','')),rows=endingCategory==='main'?cat.main:cat.roles[roleIndex];return `<p>每项下列条件须同时满足；按完整三轮正式结果核对。本轮预算均须合法，协议须实际兑现。勾选为本局已满足条件。</p><div class="ending-tabs" aria-label="选择结局类别">${[['main','八类主结局'],...ROLES.map((r,i)=>[`role${i}`,`第${i+1}组`])].map(([key,label])=>button(label,'ending-category','',`data-category="${key}" aria-pressed="${endingCategory===key}"`)).join('')}</div><div class="notice compact">两组统一评工${careerFacts(c).evaluationCount}轮；第二组全天出工${c.motherFull}轮、累计净得${c.points[1]}分；经验${c.skill}点；资源余${c.reserve}点。</div><h3>${endingCategory==='main'?'八类合作社主结局':ROLES[roleIndex].name+' · 角色结局'}</h3>${rows.map(e=>`<article class="ending-entry ${e.matched?'current-ending':''}"><div class="ending-title"><h3>${e.title}</h3>${e.matched?pill('本局结局'):''}</div>${e.text?`<p>${e.text}</p>`:''}<ul class="requirements">${e.requirements.map(r=>`<li class="${r.met?'met':''}"><span>${r.met?'✓ 已满足':'○ 未满足'}</span>${r.text}</li>`).join('')}</ul></article>`).join('')}<p class="help">角色结局还附加负担标签：0—3点较低，4—6点持续存在，7点及以上为较重负担。18分是课堂观察线，不是历史贫困线。</p>`;}
+function endingEntry(e,main){
+  const reading=main?ENDING_READINGS[e.id]:null;
+  return `<article class="ending-entry ${e.matched?'current-ending':''}"><div class="ending-title"><h3>${e.title}</h3>${e.matched?pill('本局结局'):''}</div>${e.text?`<p>${e.text}</p>`:''}<ul class="requirements">${e.requirements.map(r=>`<li class="${r.met?'met':''}"><span>${r.met?'✓ 已满足':'○ 未满足'}</span>${r.text}</li>`).join('')}</ul>${reading?`<details class="ending-reading"><summary>查看导修评价和文本经历</summary><p><strong>${reading.question}</strong></p><p>${reading.evaluation}</p><p>${reading.experience}</p><p class="ending-source">${reading.source}</p></details>`:''}</article>`;
+}
+function allEndingsHtml(){const c=data().career,cat=endingCatalog(c),roleIndex=Number(endingCategory.replace('role','')),rows=endingCategory==='main'?cat.main:cat.roles[roleIndex];return `<p>每项下列条件须同时满足；按完整三轮正式结果核对。本轮预算均须合法，协议须实际兑现。勾选为本局已满足条件。</p><div class="ending-tabs" aria-label="选择结局类别">${[['main','八种主结局'],...ROLES.map((r,i)=>[`role${i}`,`第${i+1}组`])].map(([key,label])=>button(label,'ending-category','',`data-category="${key}" aria-pressed="${endingCategory===key}"`)).join('')}</div><div class="notice compact">两组统一评工${careerFacts(c).evaluationCount}轮；第二组全天出工${c.motherFull}轮、累计净得${c.points[1]}分；经验${c.skill}点；资源余${c.reserve}点。</div>${endingCategory==='main'?ENDING_GROUPS.map(group=>`<section class="ending-category" data-tone="${group.tone}"><h3>${group.label}</h3>${group.ids.map(id=>endingEntry(rows[id],true)).join('')}</section>`).join(''):`<h3>${ROLES[roleIndex].name} · 角色结局</h3>${rows.map(e=>endingEntry(e,false)).join('')}`}<p class="help">角色结局还附加负担标签：0—3点较低，4—6点持续存在，7点及以上为较重负担。18分是课堂观察线，不是历史贫困线。</p>`;}
 function historyHtml(){const {results}=data();return results.map((r,i)=>`<details ${i===results.length-1?'open':''}><summary>第${i+1}轮 · ${ERAS[i].years} · ${ERAS[i].title}</summary>${budget(r)}${ledger(r)}<h4>协商记录</h4><p>${esc(state.notes[i]||'未填写')}</p><h4>实际兑现</h4>${r.adjusted?`<p>${adjustmentSummary(r)}</p>`:''}<p>家庭分担：${r.family||r.cookingShared?'是':'否'}；男方照料付费：${r.maleFee}分；带工：${r.mentor?'是':'否'}；正式岗位：${r.formal?'是':'否'}。</p>${r.unused.map(t=>`<p>${t}</p>`).join('')}</details>`).join('');}
 function rulesHtml(){return `<h3>三阶段模拟怎样进行</h3><p>四组独立登记行动和适用的备用方案，选择公布后锁定。只有涉及协议的组需要确认。协议未达成时执行备用，只开放受影响的选择。预算超额时第四组可削减已选投入。主持人核对后每阶段结算一次。前三组累计工分与负担，第一组积累经验，第四组资源余额保留。没有共同方案表决、倒计时或超时提交。</p><p>三轮依次在1953—1955、1956—1957、1961—1962各选一次代表性农忙。1958年开始的公社化作为第三轮的背景。每轮只模拟一次代表性农忙安排，工分和资源采用课堂设定。三轮结束后回望1970年代。前两轮用一项家庭事务代表照料及必要家务。第三轮分开安排做饭备柴和照料。</p>
 <h3>前两轮岗位与照料</h3><p>第一轮须第四组留出试工位，且第一、三组达成带工协议，第一组才能实际试做重活。本村从第二轮开始可以开办农忙托儿点。第二轮，有试工经验的第一组可以独立申请派工，仍须第四组安排岗位。还没有经验的第一组须有带工才能试做。</p><h3>第三轮食堂停办后的排班</h3><p>本村食堂停办，夫妻须分别安排做饭备柴和照料，两项各占半天。第三组可以留队出工半天、接手其中一项，经夫妻确认后执行。哪项安排没落实，就由第二组接手，占她半天出工时间。照料费仍为4分，照料费用从个人工分中扣除。</p><h3>第三轮外派、补位与托儿</h3><p>第三组可外派全天，示范账记12分，本队田间出工为0。当轮无法接手家庭事务或带工，仍可分担邻里照料费。第一组有2点经验、选择重活且第四组落实岗位时，可补上空出的半日重活。当第三组留队时，沿用原有学习和派工规则。</p><p>第四组可安排另一名本队社员或报名的第一组照料半天。这半天从田间出工转为照料，第一组如果获安排，另半天做普通农活。第一组未报名时，指派她的方案不消耗托儿资源，也无法提供托儿。小托儿组延续上轮安排需2点，新办需3点。第二组实际使用时另给照料人员记4分。外派工分和本队田间时间分列。</p><h3>每轮资源与组织成本</h3><table><tr><th>轮次</th><th>可用资源</th></tr><tr><td>第一轮</td><td>6点</td></tr><tr><td>第二轮</td><td>前轮余额＋4点</td></tr><tr><td>第三轮</td><td>前轮余额＋3点</td></tr></table><ul><li>原差别计价0点；仅第一组统一1点；两组统一首次或恢复2点，连续维持1点。</li><li>岗位学习2点，实际带工减为1点；本轮开始经验已有2点，提供正式岗位1点。</li><li>集体照料首次或恢复3点，连续开办2点。开办后无人使用也扣成本。</li><li>不能借下一轮资源，工分不能换资源。预算超额时第四组调整投入后再结算。</li></ul>
@@ -472,7 +579,7 @@ function rulesHtml(){return `<h3>三阶段模拟怎样进行</h3><p>四组独立
 <h3>三项协议与备用</h3><ul><li>家庭分担需第二组选择家庭分担、第三组选择接手且双方同意。前两轮第三组承担半日家庭事务和一项晚间家务。第三轮改为半天做饭或半天照料，两项只能接手一项。</li><li>邻里照料合计4分，男方可承担0—4分。男方付费须双方确认数额；改数额清除费用签名。女方全部自付可自行选择。</li><li>带工需第一组经验不足2点，第四组提供支持，第一组实际实践，第一、三组均同意。组织成本减1，学习负担减1，指导者负担加1，不额外记工。</li><li>每轮重新签约。前两轮第二组条件不匹配时，按其备用自己处理家庭事务，或自付4分请邻里照料。第三轮未落实的做饭或照料由第二组接回。第三组的家庭分担未执行时，按其备用接受派工或只接重活。</li><li>双方已签但行动不匹配，不扣费用、不执行额外责任。各组自主选择行动，不能以多数票强迫其他组承担责任。</li></ul>
 <h3>经验与负担</h3><p>实际完成半日重活实践，每轮经验＋1，最高3点，不因暂停而消失。本轮开始已达2点并继续实践，才形成正式岗位。只申请或支持闲置不加经验。</p><table><tr><th>小组</th><th>当轮负担增加</th></tr><tr><td>第一组</td><td>普通劳动＋2；学习重活＋3，实际带工降为＋2；正式岗位＋2；半天出工与休整＋1。</td></tr><tr><td>第二组</td><td>自己处理家庭事务＋3；邻里或集体照料＋2；家庭分担＋1。</td></tr><tr><td>第三组</td><td>接受派工或只接重活＋1；家庭分担＋3；实际带工另＋1。</td></tr></table><p>第三轮第二组自己做饭备柴额外增加1点负担。第三组接手做饭时，按承担家庭事务记3点。累计负担0—3点标记较低，4—6点持续存在，7点及以上较重积累。是课堂指数，不等于小时数或健康情况。</p>
 <h3>四组账目</h3><p>每轮显示本轮工分和累计前后变化、出工与家庭事务、费用、经验和负担、资源及支持闲置。夫妻合计为第二、三组净得之和。费用分担只改变个人净得，不改变邻里服务的4分家庭总支出。</p><p>邻里照料收到家庭转付4分；实际使用集体照料时，照料人员记4分。第一组承担时，这4分计入她个人工分。另一名本队社员承担时，这4分计入集体示范记工。不直接等同新增粮食或财富。</p>
-<h3>长期结局</h3><p>八类主结局依次判断：①从未覆盖两组；②曾覆盖后回退；③第三轮覆盖但主要照料者最多一轮全天出工；④全天出工增加但个人累计净得不足18分；⑤所得改善而评工或岗位未稳；⑥机会回报改善而照料缺少连续支持；⑦支持持续、本轮家庭分担；⑧支持持续、本轮集体服务。</p><p>较后四类须第二组至少两轮全天出工且净得至少18分。第⑥—⑧类还须两组统一评工至少两轮并延续至第三轮、第一组第三轮取得正式岗位。连续照料支持指第二、三轮都实际采用家庭分担或集体照料，两轮方式可以不同。</p><p>结局页可查看八类主结局与四组角色结局的全部条件，逐项标记是否满足。18分是课堂观察线，不是历史贫困线。结局保留全程记录，改善不会抹去前期代价。</p>
+<h3>长期结局</h3><p>八类主结局依次判断：①从未覆盖两组；②曾覆盖后回退；③第三轮覆盖但主要照料者最多一轮全天出工；④全天出工增加但个人累计净得不足18分；⑤所得改善而评工或岗位未稳；⑥机会回报改善而照料缺少连续支持；⑦支持持续、本轮家庭分担；⑧支持持续、本轮集体服务。</p><p>较后四类须第二组至少两轮全天出工且净得至少18分。第⑥—⑧类还须两组统一评工至少两轮并延续至第三轮、第一组第三轮取得正式岗位。连续照料支持指第二、三轮都实际采用家庭分担或集体照料，两轮方式可以不同。</p><p>八种主结局按好、坏、普通和开放四类展示。主结局根据本局账目评价生产机会、报酬和家庭分工，并附贺萧的文本经历。可查看八种主结局与四组角色结局的全部条件。18分是课堂观察线，不是历史贫困线。结局保留全程记录，改善不会抹去前期代价。</p>
 <h3>课堂安排</h3><p>介绍约2分钟，三轮各约4分钟，结局约3分钟，回望讨论约3分钟，共约20分钟。主持人自主把握，不设置任何计时或自动提交。</p>`;}
 function resetDialog(){showDialog('重新开始',`<p>重新开始将清空本机这局模拟的三轮记录、协议与累计账目。</p><div class="actions">${button('取消','close')}${button('确认重新开始','reset-confirm','danger')}</div>`);}
 document.addEventListener('change',event=>{
